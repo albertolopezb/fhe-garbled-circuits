@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Panel Policía · Private Proximity</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+<div class="shell">
+  <header class="topbar">
+    <div class="brand"><span class="brand-mark">PP</span><span>Private Proximity</span></div>
+    <div class="user-strip"><a class="demo-nav-link" href="/">Centro demo</a><span id="userName"></span><button class="ghost" id="logoutBtn">Salir</button></div>
+  </header>
+  <main class="page">
+    <div class="hero">
+      <div>
+        <span class="badge">Vista Policía</span>
+        <h1>Casos y resultados</h1>
+        <p class="muted">La base de datos almacena usuarios, casos y la clasificación final. Las coordenadas privadas y secret keys no se guardan.</p>
+      </div>
+      <button id="toggleCreate">+ Nuevo caso</button>
+    </div>
+
+    <section class="card" id="createCard" hidden>
+      <h2>Crear caso</h2>
+      <div class="grid">
+        <label>Nombre del caso <input id="caseTitle" value="Caso 001 · Escena de prueba" /></label>
+        <label>Radio público R <input id="caseRadius" type="number" min="0" value="1" /></label>
+      </div>
+      <p class="muted">Selecciona los usuarios que participarán. Cada persona recibe una sesión criptográfica independiente con la Policía.</p>
+      <div id="suspectChecklist" class="check-list"></div>
+      <div class="actions"><button id="createCaseBtn">Crear caso y sesiones</button><button class="secondary" id="cancelCreate">Cancelar</button></div>
+      <div id="createStatus" class="status" hidden></div>
+    </section>
+
+    <section>
+      <div class="case-list" id="caseList"><div class="empty">Cargando casos…</div></div>
+    </section>
+  </main>
+</div>
+<script src="/shared.js"></script>
+<script src="/police-dashboard.js"></script>
+</body>
+</html>

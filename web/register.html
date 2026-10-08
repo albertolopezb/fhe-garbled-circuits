@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Registro · Private Proximity</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+<div class="auth-wrap">
+  <section class="auth-card">
+    <div class="brand"><span class="brand-mark">PP</span><span>Private Proximity</span></div>
+    <h1>Crear cuenta</h1>
+    <p class="muted">Las cuentas creadas desde aquí son usuarios tipo sospechoso. El rol policía no puede autoasignarse.</p>
+    <form id="registerForm" class="stack">
+      <label>Nombre <input id="displayName" required /></label>
+      <label>Correo <input id="email" type="email" autocomplete="email" required /></label>
+      <label>Contraseña <input id="password" type="password" minlength="8" autocomplete="new-password" required /></label>
+      <button type="submit">Registrarme</button>
+    </form>
+    <div id="status" class="status" hidden></div>
+    <p class="muted"><a href="/login.html">Volver al login</a></p>
+  </section>
+</div>
+<script src="/shared.js"></script>
+<script src="/auth.js"></script>
+</body>
+</html>

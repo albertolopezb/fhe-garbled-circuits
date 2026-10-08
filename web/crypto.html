@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Protocolo criptográfico · Private Proximity</title>
+  <link rel="stylesheet" href="/style.css" />
+  <script src="/wasm_exec.js"></script>
+</head>
+<body>
+<div class="shell">
+  <header class="topbar">
+    <div class="brand"><span class="brand-mark">PP</span><span>Private Proximity</span></div>
+    <div class="user-strip"><span id="userName"></span><a id="backLink" class="button secondary" href="#">Volver</a></div>
+  </header>
+  <main class="page">
+    <div class="hero"><div><span id="roleBadge" class="badge">Protocolo</span><h1 id="pageTitle">Sesión criptográfica</h1><p id="pageSubtitle" class="muted"></p></div></div>
+
+    <div class="crypto-layout">
+      <div>
+        <section class="card">
+          <h2>1. Inicialización multiparty</h2>
+          <p class="muted">Tu secret key se genera dentro de este navegador y nunca se envía a la API. Para poder volver al dashboard sin perderla, esta demo conserva una copia serializada únicamente en <code>IndexedDB</code> local del navegador.</p>
+          <div class="actions">
+            <button id="initBtn" disabled>Generar secret key y participar en CPK/RLK</button>
+            <button id="resetBtn" class="secondary" hidden>Reiniciar sesión criptográfica</button>
+          </div>
+          <div id="cryptoStatus" class="status">Cargando party.wasm…</div>
+        </section>
+
+        <section class="card">
+          <h2 id="inputTitle">2. Datos privados</h2>
+          <div class="grid">
+            <label id="xLabel">X <input id="x" type="number" value="10" /></label>
+            <label id="yLabel">Y <input id="y" type="number" value="20" /></label>
+          </div>
+          <div class="notice" style="margin-top:16px">Estos valores se usan localmente para crear ciphertexts. La API no recibe las coordenadas en claro.</div>
+          <div class="actions"><button id="sendBtn" disabled>Cifrar localmente y enviar ciphertexts</button></div>
+        </section>
+
+        <section class="card">
+          <h2>Resultado</h2>
+          <div id="result" class="status">Esperando el protocolo…</div>
+        </section>
+
+        <section class="card">
+          <div class="case-header"><div><h2 style="margin-bottom:4px">Consola criptográfica</h2><p class="muted" style="margin:0">Vista explicativa del flujo. No muestra coordenadas, secret keys, D² ni Δ.</p></div><button class="secondary" id="toggleConsole">Ver consola</button></div>
+          <div id="consolePanel" class="console-panel" hidden><pre id="log" class="console"></pre></div>
+        </section>
+      </div>
+
+      <aside class="card summary">
+        <h2>Sesión</h2>
+        <div id="sessionStatus" class="status">Cargando contexto…</div>
+        <div class="kv">
+          <div><span>Caso</span><strong id="caseName">—</strong></div>
+          <div><span>Persona</span><strong id="otherName">—</strong></div>
+          <div><span>Radio público</span><strong id="radiusText">—</strong></div>
+          <div><span>Servidor con SK</span><strong>No</strong></div>
+        </div>
+      </aside>
+    </div>
+  </main>
+</div>
+<script src="/shared.js"></script>
+<script src="/crypto.js"></script>
+</body>
+</html>
