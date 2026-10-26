@@ -6,10 +6,10 @@ import (
 	"syscall/js"
 
 	"lattigo-auth-ui-demo/internal/demo"
+	"lattigo-auth-ui-demo/internal/gc"
 
 	"github.com/tuneinsight/lattigo/v6/core/rlwe"
 	"github.com/tuneinsight/lattigo/v6/multiparty"
-	"github.com/tuneinsight/lattigo/v6/ring"
 	"github.com/tuneinsight/lattigo/v6/schemes/bgv"
 	"github.com/tuneinsight/lattigo/v6/utils/sampling"
 )
@@ -21,7 +21,18 @@ type partyState struct {
 	encoder     *bgv.Encoder
 	sk          *rlwe.SecretKey
 	ephRKG      *rlwe.SecretKey
-	skOut       *rlwe.SecretKey
+
+	// Δ is never decrypted: each party only keeps an additive share of it (see gc.go).
+	e2sMask  *multiparty.AdditiveShare
+	share    uint64
+	hasShare bool
+
+	// garbled-circuit state. The suspect garbles, the police evaluates.
+	gcCtx    string
+	gcSecret *gc.Secret
+	otSender *gc.OTSender
+	otRecv   *gc.OTReceiver
+	msgs     map[string]string // messages already produced, so every step is idempotent
 }
 
 var state partyState
@@ -35,8 +46,13 @@ type request struct {
 	X          int64  `json:"x,omitempty"`
 	Y          int64  `json:"y,omitempty"`
 	CTDelta    string `json:"ctDelta,omitempty"`
-	PKOut      string `json:"pkOut,omitempty"`
-	CTOut      string `json:"ctOut,omitempty"`
+	E2SAgg     string `json:"e2sAgg,omitempty"`
+	Ctx        string `json:"ctx,omitempty"`
+	Garbled    string `json:"garbled,omitempty"`
+	GCLabels   string `json:"gcLabels,omitempty"`
+	OTA        string `json:"otA,omitempty"`
+	OTR        string `json:"otR,omitempty"`
+	OTE        string `json:"otE,omitempty"`
 	LocalState string `json:"localState,omitempty"`
 }
 
@@ -50,9 +66,12 @@ type response struct {
 	RKGR2      string `json:"rkgR2,omitempty"`
 	CTX        string `json:"ctX,omitempty"`
 	CTY        string `json:"ctY,omitempty"`
-	PKOut      string `json:"pkOut,omitempty"`
-	PCKS       string `json:"pcksShare,omitempty"`
-	Delta      int64  `json:"delta,omitempty"`
+	E2SShare   string `json:"e2sShare,omitempty"`
+	Garbled    string `json:"garbled,omitempty"`
+	GCLabels   string `json:"gcLabels,omitempty"`
+	OTA        string `json:"otA,omitempty"`
+	OTR        string `json:"otR,omitempty"`
+	OTE        string `json:"otE,omitempty"`
 	Class      string `json:"classification,omitempty"`
 	LocalState string `json:"localState,omitempty"`
 }
@@ -62,7 +81,15 @@ type localStateSnapshot struct {
 	Role    string `json:"role"`
 	SK      string `json:"sk"`
 	EphRKG  string `json:"ephRkg"`
-	SKOut   string `json:"skOut,omitempty"`
+
+	E2SMask  string            `json:"e2sMask,omitempty"`
+	HasShare bool              `json:"hasShare,omitempty"`
+	Share    uint64            `json:"share,omitempty"`
+	GCCtx    string            `json:"gcCtx,omitempty"`
+	GCSecret string            `json:"gcSecret,omitempty"`
+	OTSender string            `json:"otSender,omitempty"`
+	OTRecv   string            `json:"otRecv,omitempty"`
+	Msgs     map[string]string `json:"msgs,omitempty"`
 }
 
 func fail(err error) response {
@@ -149,12 +176,8 @@ func exportLocalState() response {
 		SK:      skB64,
 		EphRKG:  ephB64,
 	}
-	if state.skOut != nil {
-		skOutB64, err := demo.MarshalB64(state.skOut)
-		if err != nil {
-			return fail(err)
-		}
-		snapshot.SKOut = skOutB64
+	if err := exportProtocolState(&snapshot); err != nil {
+		return fail(err)
 	}
 
 	b, err := json.Marshal(snapshot)
@@ -205,18 +228,6 @@ func importLocalState(encoded string) response {
 		return fail(err)
 	}
 
-	var skOut *rlwe.SecretKey
-	if snapshot.SKOut != "" {
-		skOut = rlwe.NewSecretKey(params)
-		skOutBytes, err := demo.FromB64(snapshot.SKOut)
-		if err != nil {
-			return fail(err)
-		}
-		if err := skOut.UnmarshalBinary(skOutBytes); err != nil {
-			return fail(err)
-		}
-	}
-
 	state = partyState{
 		initialized: true,
 		role:        snapshot.Role,
@@ -224,7 +235,10 @@ func importLocalState(encoded string) response {
 		encoder:     bgv.NewEncoder(params),
 		sk:          sk,
 		ephRKG:      eph,
-		skOut:       skOut,
+	}
+	if err := importProtocolState(&snapshot); err != nil {
+		state = partyState{}
+		return fail(err)
 	}
 
 	return response{OK: true, Role: state.role, Message: "estado criptográfico local restaurado dentro de esta pestaña"}
@@ -314,88 +328,6 @@ func encryptPoint(cpkB64 string, x, y int64) response {
 	return response{OK: true, Role: state.role, CTX: xB64, CTY: yB64, Message: "coordenadas cifradas localmente bajo la CPK"}
 }
 
-func generateOutputKey() response {
-	if err := requireInit(); err != nil {
-		return fail(err)
-	}
-	if state.role != "police" {
-		return response{OK: false, Error: "solo la policía genera la llave de salida", Role: state.role}
-	}
-	if state.skOut != nil {
-		return response{OK: false, Error: "la llave de salida ya fue generada en esta pestaña", Role: state.role}
-	}
-
-	kgen := rlwe.NewKeyGenerator(state.params)
-	skOut, pkOut := kgen.GenKeyPairNew()
-	state.skOut = skOut
-
-	pkB64, err := demo.MarshalB64(pkOut)
-	if err != nil {
-		return fail(err)
-	}
-	return response{OK: true, Role: state.role, PKOut: pkB64, Message: "pk_out lista; sk_out permanece local en el navegador de policía"}
-}
-
-func pcksShare(ctDeltaB64, pkOutB64 string) response {
-	if err := requireInit(); err != nil {
-		return fail(err)
-	}
-	ctDelta, err := parseCiphertext(ctDeltaB64)
-	if err != nil {
-		return fail(err)
-	}
-	pkOut, err := parsePublicKey(pkOutB64)
-	if err != nil {
-		return fail(err)
-	}
-
-	pcks, err := multiparty.NewPublicKeySwitchProtocol(
-		state.params,
-		ring.DiscreteGaussian{Sigma: 1 << 30, Bound: 6 * (1 << 30)},
-	)
-	if err != nil {
-		return fail(err)
-	}
-	share := pcks.AllocateShare(ctDelta.Level())
-	pcks.GenShare(state.sk, pkOut, ctDelta, &share)
-	shareB64, err := demo.MarshalB64(share)
-	if err != nil {
-		return fail(err)
-	}
-	return response{OK: true, Role: state.role, PCKS: shareB64, Message: "PCKS share generada con la secret key local"}
-}
-
-func decryptOutput(ctOutB64 string) response {
-	if err := requireInit(); err != nil {
-		return fail(err)
-	}
-	if state.role != "police" || state.skOut == nil {
-		return response{OK: false, Error: "sk_out no está disponible en este cliente", Role: state.role}
-	}
-
-	ctOut, err := parseCiphertext(ctOutB64)
-	if err != nil {
-		return fail(err)
-	}
-	decryptor := rlwe.NewDecryptor(state.params, state.skOut)
-	pt := bgv.NewPlaintext(state.params, ctOut.Level())
-	decryptor.Decrypt(ctOut, pt)
-
-	values := make([]uint64, state.params.MaxSlots())
-	if err := state.encoder.Decode(pt, values); err != nil {
-		return fail(err)
-	}
-	delta := demo.Centered(values[0], state.params.PlaintextModulus())
-
-	classification := "FUERA DEL RADIO"
-	if delta < 0 {
-		classification = "DENTRO DEL RADIO"
-	} else if delta == 0 {
-		classification = "EXACTAMENTE EN EL LIMITE"
-	}
-	return response{OK: true, Role: state.role, Class: classification, Message: "resultado clasificado localmente; Delta no se expone a la UI"}
-}
-
 func handle(req request) response {
 	switch req.Op {
 	case "init":
@@ -404,12 +336,18 @@ func handle(req request) response {
 		return rkgRound2(req.R1Combined)
 	case "encryptPoint":
 		return encryptPoint(req.CPK, req.X, req.Y)
-	case "generateOutputKey":
-		return generateOutputKey()
-	case "pcksShare":
-		return pcksShare(req.CTDelta, req.PKOut)
-	case "decryptOutput":
-		return decryptOutput(req.CTOut)
+	case "e2sShare":
+		return e2sGenShare(req.CTDelta)
+	case "e2sFinish":
+		return e2sFinish(req.CTDelta, req.E2SAgg)
+	case "gcGarble":
+		return gcGarble(req.Ctx)
+	case "gcOTRespond":
+		return gcOTRespond(req.OTR)
+	case "gcOTChoose":
+		return gcOTChoose(req.Ctx, req.OTA)
+	case "gcEvaluate":
+		return gcEvaluate(req.Garbled, req.GCLabels, req.OTE)
 	case "exportState":
 		return exportLocalState()
 	case "importState":
