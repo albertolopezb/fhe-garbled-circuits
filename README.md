@@ -4,9 +4,9 @@ Esta versión está pensada para demostrar el protocolo con **Policía + tres us
 
 ## Arquitectura
 
-- **Go API**: autenticación, SQLite, coordinación de sesiones multiparty y evaluación homomórfica.
+- **Go API**: autenticación, SQLite, coordinación de sesiones multiparty, evaluación homomórfica y buzón de mensajes del circuito garbleado (no ve nada en claro).
 - **SQLite**: usuarios, sesiones de autenticación, casos, participantes y clasificación final.
-- **party.wasm**: criptografía local en cada pestaña.
+- **party.wasm**: criptografía local en cada pestaña (Lattigo + circuitos garbleados).
 - **sessionStorage**: cada pestaña conserva su propio Bearer token, por lo que Policía, Carlos, Fer y Ximena pueden coexistir sin sustituir sus identidades.
 - **IndexedDB local**: conserva el estado criptográfico serializado por `cryptoSession` para que navegar al dashboard o recargar no genere una nueva secret key.
 - **Secret keys**: nunca se envían a la API ni se guardan en SQLite. En esta demo sí se serializan **solo localmente** dentro de `IndexedDB` del navegador para poder regresar al dashboard y continuar la misma sesión.
@@ -132,11 +132,25 @@ La consola visible al usuario puede mostrar eventos como:
 [RLK] Round 1/2 completadas
 [INPUT] Coordenadas cifradas localmente
 [SERVER] Enc(dx), Enc(dy), Enc(D²), Enc(Delta) calculados
-[PCKS] Share generada
-[POLICE LOCAL] Resultado final descifrado
+[E2S] Share generada
+[POLICE LOCAL] Resultado final obtenido del circuito garbleado
 ```
 
 No imprime valores de coordenadas, secret keys, `D²` ni `Delta`.
+
+## Resultado sin descifrar Δ (circuitos garbleados)
+
+Antes, la policía descifraba `Enc(Δ)` y veía `Δ = dist² − R²` completo, lo que revela la distancia exacta del sospechoso a la escena. Ahora `Δ` nunca se descifra:
+
+1. **E2S (encryption-to-shares, `mpbgv.EncToShareProtocol`)**: cada parte elige una máscara aleatoria y publica su share de descifrado menos esa máscara. El servidor solo suma las dos shares públicas (el resultado parece aleatorio). Al final cada parte tiene una share aditiva de `Δ` módulo 65537; cada share por separado es uniforme.
+2. **Circuito garbleado** (`internal/gc`): el **sospechoso** garblea un circuito que suma las dos shares módulo 65537 (17 bits) y entrega dos bits: `Δ < 0` y `Δ = 0`. Sus labels viajan directamente; la **policía** obtiene los labels de su share con una **transferencia ciega** (OT, edwards25519), sin revelar sus bits.
+3. La policía evalúa el circuito y solo decodifica los bits de salida: `DENTRO DEL RADIO`, `FUERA DEL RADIO` o `EXACTAMENTE EN EL LIMITE`. El sospechoso no recibe el resultado.
+
+Mensajes nuevos de la API: `POST/GET /api/sessions/{id}/e2s` y `POST/GET /api/sessions/{id}/gc/{garbled|gcLabels|otA|otR|otE}`. Se eliminaron `pk_out`, `sk_out`, `/pcks`, `/output-key` y `/output`.
+
+Pruebas: `go test ./internal/gc` (circuito, garbling, OT y la tubería completa BGV → E2S → circuito).
+
+Límites conocidos: seguridad *semi-honest*; el signo de `Δ` solo es correcto si `|Δ| < 32768` (módulo del texto plano 65537); y varias consultas con puntos de escena distintos siguen filtrando información (no se resuelve criptográficamente).
 
 ## Siguiente etapa
 
@@ -156,4 +170,4 @@ si regresabas al dashboard y luego volvías a abrir el protocolo. La API recorda
 Esta versión lo corrige de dos formas:
 
 1. guarda/restaura el estado criptográfico local por `cryptoSession`;
-2. si el estado local se perdió de verdad, muestra **Reiniciar sesión criptográfica**, que borra CPK/RLK/inputs/PCKS de esa pareja y obliga a ambas partes a comenzar de nuevo con un CRS nuevo.
+2. si el estado local se perdió de verdad, muestra **Reiniciar sesión criptográfica**, que borra CPK/RLK/inputs/shares de Δ/mensajes del circuito de esa pareja y obliga a ambas partes a comenzar de nuevo con un CRS nuevo.

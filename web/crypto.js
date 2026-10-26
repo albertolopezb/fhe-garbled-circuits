@@ -16,8 +16,10 @@ let localInitialized = false;
 let r2Sent = false;
 let cpk = "";
 let inputSent = false;
-let pcksSent = false;
-let outputDecrypted = false;
+let e2sSent = false;
+let shareDone = false;
+let resultShown = false;
+let cachedDelta = "";
 let ticking = false;
 
 function log(line = "") {
@@ -123,7 +125,7 @@ async function persistLocalState(extra = {}) {
 function syncFlagsFromServer(st) {
   r2Sent = r2Sent || !!st.r2Submitted?.[role];
   inputSent = inputSent || !!st.inputSubmitted?.[role];
-  pcksSent = pcksSent || !!st.pcksSubmitted?.[role];
+  e2sSent = e2sSent || !!st.e2sSubmitted?.[role];
   if (inputSent) sendBtn.disabled = true;
 }
 
@@ -156,14 +158,6 @@ async function restoreLocalCrypto(st) {
     log("[RECOVERY] Reenvié las shares públicas de setup que estaban pendientes.");
   }
 
-  if (role === "police" && !st.pkOutReady && record.pkOutBody) {
-    await api(`/api/sessions/${sessionId}/output-key`, {
-      method: "POST",
-      body: record.pkOutBody,
-    });
-    log("[RECOVERY] Reenvié pk_out; sk_out permaneció local.");
-  }
-
   cryptoStatus.className = "status ok";
   cryptoStatus.textContent = "Estado criptográfico local restaurado. Puedes continuar sin generar otra secret key.";
   return true;
@@ -193,18 +187,6 @@ async function initializeLocalCrypto() {
       body: setupBody,
     });
     log("[API] Recibió únicamente shares públicas de setup.");
-
-    if (role === "police") {
-      const out = wasmCall({ op: "generateOutputKey" });
-      // sk_out cambió el estado local: persistir ANTES del request HTTP.
-      const pkBody = JSON.stringify({ role, pkOut: out.pkOut });
-      await persistLocalState({ pkOutBody: pkBody });
-      await api(`/api/sessions/${sessionId}/output-key`, {
-        method: "POST",
-        body: pkBody,
-      });
-      log("[LOCAL] sk_out permanece local; solo pk_out fue registrada.");
-    }
 
     cryptoStatus.className = "status ok";
     cryptoStatus.textContent = "Secret key local creada. Esperando completar CPK/RLK con la otra parte…";
@@ -275,41 +257,98 @@ async function sendEncryptedInput() {
   }
 }
 
-async function maybeSendPCKS(st) {
-  syncFlagsFromServer(st);
-  if (!localInitialized || pcksSent || !st.deltaReady || !st.pkOutReady) return;
-
-  log("[SERVER] Evaluación homomórfica terminada: Enc(dx), Enc(dy), Enc(D²) y Enc(Δ) listos.");
-  log("[SERVER] Ningún valor intermedio fue revelado en claro.");
-
-  const d = await api(`/api/sessions/${sessionId}/delta`);
-  const share = wasmCall({ op: "pcksShare", ctDelta: d.ctDelta, pkOut: d.pkOut });
-  await api(`/api/sessions/${sessionId}/pcks`, {
+async function postGC(name, data) {
+  await api(`/api/sessions/${sessionId}/gc/${name}`, {
     method: "POST",
-    body: JSON.stringify({ role, pcksShare: share.pcksShare }),
+    body: JSON.stringify({ role, data }),
   });
-  pcksSent = true;
-  log("[PCKS] Share generada con la secret key local y enviada a la API.");
 }
 
-async function maybeDecryptOutput(st) {
-  if (role !== "police" || outputDecrypted || !st.outputReady) return;
-  const out = await api(`/api/sessions/${sessionId}/output`);
-  const final = wasmCall({ op: "decryptOutput", ctOut: out.ctOut });
-  outputDecrypted = true;
-  resultEl.className = "status ok";
-  resultEl.textContent = final.classification;
-  log("[POLICE LOCAL] Ciphertext final descifrado con sk_out.");
-  log(`[RESULTADO] ${final.classification}. Δ no se muestra ni se guarda en la base de datos.`);
+async function getGC(name) {
+  return (await api(`/api/sessions/${sessionId}/gc/${name}`)).data;
+}
 
-  await api(`/api/targets/${targetId}/result`, {
-    method: "POST",
-    body: JSON.stringify({ classification: final.classification }),
-  });
+async function getDelta() {
+  if (!cachedDelta) cachedDelta = (await api(`/api/sessions/${sessionId}/delta`)).ctDelta;
+  return cachedDelta;
+}
+
+// Δ is never decrypted. Step A: both parties turn Enc(Δ) into additive shares (E2S).
+async function advanceShares(st) {
+  if (st.deltaReady && !e2sSent) {
+    log("[SERVER] Evaluación homomórfica terminada: Enc(Δ) listo. Ningún valor intermedio fue revelado.");
+    const ctDelta = await getDelta();
+    const out = wasmCall({ op: "e2sShare", ctDelta });
+    // la máscara aditiva solo existe en este navegador: persistirla ANTES de enviar la share pública.
+    await persistLocalState();
+    await api(`/api/sessions/${sessionId}/e2s`, {
+      method: "POST",
+      body: JSON.stringify({ role, e2sShare: out.e2sShare }),
+    });
+    e2sSent = true;
+    log("[E2S] Share pública enviada. La máscara aditiva permanece local; Δ no se descifra.");
+  }
+  if (st.e2sReady && !shareDone) {
+    const ctDelta = await getDelta();
+    const agg = (await api(`/api/sessions/${sessionId}/e2s`)).agg;
+    wasmCall({ op: "e2sFinish", ctDelta, e2sAgg: agg });
+    await persistLocalState();
+    shareDone = true;
+    log("[E2S] Tengo mi share aditiva de Δ. La suma de ambas shares da Δ, pero cada una sola es aleatoria.");
+  }
+}
+
+// Step B: garbled circuit. The suspect garbles, the police evaluates and learns only the classification.
+async function advanceCircuit(st) {
+  if (!shareDone) return;
+  const gm = st.gcMessages || {};
+
+  if (role === "suspect") {
+    if (!(gm.garbled && gm.gcLabels && gm.otA)) {
+      const g = wasmCall({ op: "gcGarble", ctx: sessionId });
+      await persistLocalState();
+      await postGC("garbled", g.garbled);
+      await postGC("gcLabels", g.gcLabels);
+      await postGC("otA", g.otA);
+      log("[GC] Circuito garbleado localmente; envié tablas y los labels de mi share.");
+    }
+    if (gm.otR && !gm.otE) {
+      const otR = await getGC("otR");
+      const r = wasmCall({ op: "gcOTRespond", otR });
+      await persistLocalState();
+      await postGC("otE", r.otE);
+      log("[OT] Respondí la transferencia ciega: no sé qué labels eligió la policía.");
+      resultEl.className = "status ok";
+      resultEl.textContent = "Tu parte terminó. El resultado se entrega únicamente a la vista de Policía.";
+    }
+    return;
+  }
+
+  if (gm.otA && !gm.otR) {
+    const otA = await getGC("otA");
+    const r = wasmCall({ op: "gcOTChoose", ctx: sessionId, otA });
+    await persistLocalState();
+    await postGC("otR", r.otR);
+    log("[OT] Elegí mis labels sin revelar los bits de mi share.");
+  }
+  if (gm.garbled && gm.gcLabels && gm.otE && !resultShown) {
+    const [garbled, gcLabels, otE] = await Promise.all([getGC("garbled"), getGC("gcLabels"), getGC("otE")]);
+    const final = wasmCall({ op: "gcEvaluate", garbled, gcLabels, otE });
+    resultShown = true;
+    resultEl.className = "status ok";
+    resultEl.textContent = final.classification;
+    log("[GC] Circuito evaluado localmente. Solo se decodificó el bit de resultado.");
+    log(`[RESULTADO] ${final.classification}. Δ nunca se reconstruyó ni se guarda en la base de datos.`);
+
+    await api(`/api/targets/${targetId}/result`, {
+      method: "POST",
+      body: JSON.stringify({ classification: final.classification }),
+    });
+  }
 }
 
 function updateStatus(st) {
-  const phase = st.outputReady ? "salida lista" : st.deltaReady ? "evaluación lista" : st.setupReady ? "setup listo" : "setup en progreso";
+  const phase = st.gcMessages?.otE ? "circuito evaluado" : st.e2sReady ? "shares de Δ listas" : st.deltaReady ? "evaluación lista" : st.setupReady ? "setup listo" : "setup en progreso";
   sessionStatus.textContent = `Sesión activa · ${phase} · servidor con secret keys: NO`;
 
   if (!st.setupReady && localInitialized) {
@@ -347,10 +386,10 @@ async function tick() {
     await advanceSetup(st);
     const st2 = await state();
     syncFlagsFromServer(st2);
-    await maybeSendPCKS(st2);
+    if (localInitialized) await advanceShares(st2);
     const st3 = await state();
     syncFlagsFromServer(st3);
-    await maybeDecryptOutput(st3);
+    if (localInitialized) await advanceCircuit(st3);
   } catch (err) {
     log(`[POLL] ${err.message}`);
   } finally {
@@ -399,7 +438,7 @@ async function boot() {
 
   log(`[AUTH] ${u.displayName} autenticado como ${role}.`);
   log("[BOOT] La API coordina material público, shares y ciphertexts.");
-  log("[PRIVACIDAD] La consola omite coordenadas, secret keys, D² y Δ.");
+  log("[PRIVACIDAD] La consola omite coordenadas, secret keys, D², Δ y las shares de Δ.");
 
   const restored = await restoreLocalCrypto(st);
   if (!restored) {
@@ -423,7 +462,7 @@ async function boot() {
 }
 
 async function resetCryptoSession() {
-  if (!confirm("Esto reiniciará CPK/RLK, inputs y PCKS de esta pareja. Ambas partes tendrán que generar nuevamente su estado local. ¿Continuar?")) return;
+  if (!confirm("Esto reiniciará CPK/RLK, inputs, shares de Δ y mensajes del circuito de esta pareja. Ambas partes tendrán que generar nuevamente su estado local. ¿Continuar?")) return;
   resetBtn.disabled = true;
   try {
     await api(`/api/sessions/${sessionId}/reset`, { method: "POST", body: "{}" });
