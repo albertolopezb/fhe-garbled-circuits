@@ -18,6 +18,7 @@ import (
 
 	"github.com/tuneinsight/lattigo/v6/core/rlwe"
 	"github.com/tuneinsight/lattigo/v6/multiparty"
+	"github.com/tuneinsight/lattigo/v6/multiparty/mpbgv"
 	"github.com/tuneinsight/lattigo/v6/ring"
 	"github.com/tuneinsight/lattigo/v6/schemes/bgv"
 	"github.com/tuneinsight/lattigo/v6/utils/sampling"
@@ -52,13 +53,16 @@ type session struct {
 	R1CombinedB64 string
 	EVK           *rlwe.MemEvaluationKeySet
 
-	PKOutB64 string
-
 	Inputs  map[string]encryptedInput
 	CTDelta string
 
-	PCKSShare map[string]string
-	CTOut     string
+	// Δ is never decrypted. Both parties publish an E2S share (masked decryption
+	// share); the server only aggregates them. The aggregate looks uniformly random.
+	E2SShare map[string]string
+	E2SAgg   string
+
+	// Mailbox for the garbled-circuit and oblivious-transfer messages (opaque to the server).
+	GC map[string]string
 }
 
 type store struct {
@@ -79,11 +83,6 @@ type r2Request struct {
 	RKGR2 string `json:"rkgR2"`
 }
 
-type outputKeyRequest struct {
-	Role  string `json:"role"`
-	PKOut string `json:"pkOut"`
-}
-
 type inputRequest struct {
 	Role   string `json:"role"`
 	CTX    string `json:"ctX"`
@@ -91,9 +90,14 @@ type inputRequest struct {
 	Radius int64  `json:"radius,omitempty"`
 }
 
-type pcksRequest struct {
-	Role      string `json:"role"`
-	PCKSShare string `json:"pcksShare"`
+type e2sRequest struct {
+	Role     string `json:"role"`
+	E2SShare string `json:"e2sShare"`
+}
+
+type gcRequest struct {
+	Role string `json:"role"`
+	Data string `json:"data"`
 }
 
 type stateResponse struct {
@@ -104,11 +108,11 @@ type stateResponse struct {
 	Round1Ready      bool            `json:"round1Ready"`
 	R2Submitted      map[string]bool `json:"r2Submitted"`
 	SetupReady       bool            `json:"setupReady"`
-	PKOutReady       bool            `json:"pkOutReady"`
 	InputSubmitted   map[string]bool `json:"inputSubmitted"`
 	DeltaReady       bool            `json:"deltaReady"`
-	PCKSSubmitted    map[string]bool `json:"pcksSubmitted"`
-	OutputReady      bool            `json:"outputReady"`
+	E2SSubmitted     map[string]bool `json:"e2sSubmitted"`
+	E2SReady         bool            `json:"e2sReady"`
+	GCMessages       map[string]bool `json:"gcMessages"`
 	ServerHasSecrets bool            `json:"serverHasSecrets"`
 }
 
@@ -119,11 +123,14 @@ type setupArtifactsResponse struct {
 
 type deltaResponse struct {
 	CTDelta string `json:"ctDelta"`
-	PKOut   string `json:"pkOut"`
 }
 
-type outputResponse struct {
-	CTOut string `json:"ctOut"`
+type e2sAggResponse struct {
+	Agg string `json:"agg"`
+}
+
+type gcResponse struct {
+	Data string `json:"data"`
 }
 
 type messageResponse struct {
@@ -197,7 +204,8 @@ func createSession(policeUserID, suspectUserID, targetID int64) (*session, error
 		R1Share:       map[string]string{},
 		R2Share:       map[string]string{},
 		Inputs:        map[string]encryptedInput{},
-		PCKSShare:     map[string]string{},
+		E2SShare:      map[string]string{},
+		GC:            map[string]string{},
 	}
 
 	sessions.mu.Lock()
@@ -471,62 +479,59 @@ func evaluateIfReadyLocked(s *session) error {
 	return nil
 }
 
-func keySwitchIfReadyLocked(s *session) error {
-	if s.CTOut != "" {
-		return nil
-	}
-	if s.CTDelta == "" || s.PKOutB64 == "" || s.PCKSShare["police"] == "" || s.PCKSShare["suspect"] == "" {
-		return nil
-	}
+func newE2SProtocol(params bgv.Parameters) (mpbgv.EncToShareProtocol, error) {
+	return mpbgv.NewEncToShareProtocol(
+		params,
+		ring.DiscreteGaussian{Sigma: 1 << 30, Bound: 6 * (1 << 30)},
+	)
+}
 
+// aggregateE2SIfReadyLocked adds the two parties' public E2S shares. The result is
+// Δ minus both secret masks plus noise, i.e. uniformly random for anyone but the parties.
+func aggregateE2SIfReadyLocked(s *session) error {
+	if s.E2SAgg != "" {
+		return nil
+	}
+	if s.CTDelta == "" || s.E2SShare["police"] == "" || s.E2SShare["suspect"] == "" {
+		return nil
+	}
 	ctDelta, err := parseCiphertext(s.Params, s.CTDelta)
 	if err != nil {
 		return err
 	}
-	if _, err := parsePublicKey(s.Params, s.PKOutB64); err != nil {
-		return err
-	}
-
-	pcks, err := multiparty.NewPublicKeySwitchProtocol(
-		s.Params,
-		ring.DiscreteGaussian{Sigma: 1 << 30, Bound: 6 * (1 << 30)},
-	)
+	e2s, err := newE2SProtocol(s.Params)
 	if err != nil {
 		return err
 	}
-	pShare := pcks.AllocateShare(ctDelta.Level())
-	qShare := pcks.AllocateShare(ctDelta.Level())
-	combined := pcks.AllocateShare(ctDelta.Level())
+	pShare := e2s.AllocateShare(ctDelta.Level())
+	qShare := e2s.AllocateShare(ctDelta.Level())
+	combined := e2s.AllocateShare(ctDelta.Level())
 
-	data, err := decodeB64(s.PCKSShare["police"])
+	data, err := decodeB64(s.E2SShare["police"])
 	if err != nil {
 		return err
 	}
 	if err := pShare.UnmarshalBinary(data); err != nil {
 		return err
 	}
-	data, err = decodeB64(s.PCKSShare["suspect"])
+	data, err = decodeB64(s.E2SShare["suspect"])
 	if err != nil {
 		return err
 	}
 	if err := qShare.UnmarshalBinary(data); err != nil {
 		return err
 	}
-
-	if err := pcks.AggregateShares(pShare, combined, &combined); err != nil {
+	if err := e2s.AggregateShares(pShare, combined, &combined); err != nil {
 		return err
 	}
-	if err := pcks.AggregateShares(qShare, combined, &combined); err != nil {
+	if err := e2s.AggregateShares(qShare, combined, &combined); err != nil {
 		return err
 	}
-
-	ctOut := bgv.NewCiphertext(s.Params, 1, ctDelta.Level())
-	pcks.KeySwitch(ctDelta, combined, ctOut)
-	out, err := demo.MarshalB64(ctOut)
+	out, err := demo.MarshalB64(combined)
 	if err != nil {
 		return err
 	}
-	s.CTOut = out
+	s.E2SAgg = out
 	return nil
 }
 
@@ -545,17 +550,17 @@ func currentStateLocked(s *session) stateResponse {
 			"suspect": s.R2Share["suspect"] != "",
 		},
 		SetupReady: s.EVK != nil,
-		PKOutReady: s.PKOutB64 != "",
 		InputSubmitted: map[string]bool{
 			"police":  s.Inputs["police"].CTX != "",
 			"suspect": s.Inputs["suspect"].CTX != "",
 		},
 		DeltaReady: s.CTDelta != "",
-		PCKSSubmitted: map[string]bool{
-			"police":  s.PCKSShare["police"] != "",
-			"suspect": s.PCKSShare["suspect"] != "",
+		E2SSubmitted: map[string]bool{
+			"police":  s.E2SShare["police"] != "",
+			"suspect": s.E2SShare["suspect"] != "",
 		},
-		OutputReady:      s.CTOut != "",
+		E2SReady:         s.E2SAgg != "",
+		GCMessages:       gcPresentLocked(s),
 		ServerHasSecrets: false,
 	}
 }
@@ -754,11 +759,11 @@ func resetSessionLocked(s *session) error {
 	s.CPKB64 = ""
 	s.R1CombinedB64 = ""
 	s.EVK = nil
-	s.PKOutB64 = ""
 	s.Inputs = map[string]encryptedInput{}
 	s.CTDelta = ""
-	s.PCKSShare = map[string]string{}
-	s.CTOut = ""
+	s.E2SShare = map[string]string{}
+	s.E2SAgg = ""
+	s.GC = map[string]string{}
 
 	return updateTargetCryptoSession(s.TargetID, s.ID)
 }
@@ -866,36 +871,6 @@ func handleR2(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, messageResponse{OK: true, Message: "RKG round 2 recibida"})
 }
 
-func handleOutputKey(w http.ResponseWriter, r *http.Request) {
-	s, u, sessionRole := requireSession(w, r)
-	if s == nil {
-		return
-	}
-	var req outputKeyRequest
-	if err := decodeJSON(w, r, &req); err != nil {
-		writeError(w, http.StatusBadRequest, err)
-		return
-	}
-	if u.Role != "police" || sessionRole != "police" || req.Role != "police" || req.PKOut == "" {
-		writeError(w, http.StatusForbidden, errors.New("solo la policía de esta sesión puede registrar pkOut"))
-		return
-	}
-	if _, err := parsePublicKey(s.Params, req.PKOut); err != nil {
-		writeError(w, http.StatusBadRequest, fmt.Errorf("pkOut inválida: %w", err))
-		return
-	}
-
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	if s.PKOutB64 != "" && s.PKOutB64 != req.PKOut {
-		writeError(w, http.StatusConflict, errors.New("pkOut ya fue registrada"))
-		return
-	}
-	s.PKOutB64 = req.PKOut
-	markTargetProcessing(s.TargetID)
-	writeJSON(w, http.StatusOK, messageResponse{OK: true, Message: "pk_out pública registrada"})
-}
-
 func handleInput(w http.ResponseWriter, r *http.Request) {
 	s, u, sessionRole := requireSession(w, r)
 	if s == nil {
@@ -948,63 +923,142 @@ func handleDelta(w http.ResponseWriter, r *http.Request) {
 	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	if s.CTDelta == "" || s.PKOutB64 == "" {
-		writeError(w, http.StatusConflict, errors.New("Enc(Delta) o pk_out todavía no están listos"))
+	if s.CTDelta == "" {
+		writeError(w, http.StatusConflict, errors.New("Enc(Delta) todavía no está listo"))
 		return
 	}
-	writeJSON(w, http.StatusOK, deltaResponse{CTDelta: s.CTDelta, PKOut: s.PKOutB64})
+	writeJSON(w, http.StatusOK, deltaResponse{CTDelta: s.CTDelta})
 }
 
-func handlePCKS(w http.ResponseWriter, r *http.Request) {
+func handleE2S(w http.ResponseWriter, r *http.Request) {
 	s, u, sessionRole := requireSession(w, r)
 	if s == nil {
 		return
 	}
-	var req pcksRequest
+	var req e2sRequest
 	if err := decodeJSON(w, r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err)
 		return
 	}
-	if !roleMatchesSession(s, u, req.Role) || req.Role != sessionRole || req.PCKSShare == "" {
-		writeError(w, http.StatusBadRequest, errors.New("rol o pcksShare inválidos"))
+	if !roleMatchesSession(s, u, req.Role) || req.Role != sessionRole || req.E2SShare == "" {
+		writeError(w, http.StatusBadRequest, errors.New("rol o e2sShare inválidos"))
 		return
 	}
 
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	if s.CTDelta == "" || s.PKOutB64 == "" {
-		writeError(w, http.StatusConflict, errors.New("Enc(Delta) o pk_out todavía no están listos"))
+	if s.CTDelta == "" {
+		writeError(w, http.StatusConflict, errors.New("Enc(Delta) todavía no está listo"))
 		return
 	}
-	if old := s.PCKSShare[req.Role]; old != "" && old != req.PCKSShare {
-		writeError(w, http.StatusConflict, errors.New("ese rol ya envió otra PCKS share"))
+	if old := s.E2SShare[req.Role]; old != "" && old != req.E2SShare {
+		writeError(w, http.StatusConflict, errors.New("ese rol ya envió otra E2S share"))
 		return
 	}
-	s.PCKSShare[req.Role] = req.PCKSShare
-	if err := keySwitchIfReadyLocked(s); err != nil {
+	s.E2SShare[req.Role] = req.E2SShare
+	if err := aggregateE2SIfReadyLocked(s); err != nil {
 		writeError(w, http.StatusBadRequest, err)
 		return
 	}
 	markTargetProcessing(s.TargetID)
-	writeJSON(w, http.StatusOK, messageResponse{OK: true, Message: "PCKS share recibida"})
+	writeJSON(w, http.StatusOK, messageResponse{OK: true, Message: "E2S share recibida"})
 }
 
-func handleOutput(w http.ResponseWriter, r *http.Request) {
-	s, u, role := requireSession(w, r)
+func handleE2SAgg(w http.ResponseWriter, r *http.Request) {
+	s, _, _ := requireSession(w, r)
 	if s == nil {
-		return
-	}
-	if u.Role != "police" || role != "police" {
-		writeError(w, http.StatusForbidden, errors.New("solo policía puede obtener el ciphertext final"))
 		return
 	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	if s.CTOut == "" {
-		writeError(w, http.StatusConflict, errors.New("ciphertext de salida todavía no está listo"))
+	if s.E2SAgg == "" {
+		writeError(w, http.StatusConflict, errors.New("el agregado E2S todavía no está listo"))
 		return
 	}
-	writeJSON(w, http.StatusOK, outputResponse{CTOut: s.CTOut})
+	writeJSON(w, http.StatusOK, e2sAggResponse{Agg: s.E2SAgg})
+}
+
+// Garbled-circuit mailbox. Who may write each message: the suspect garbles and answers
+// the OT, the police makes the OT selection. The server just stores opaque bytes.
+var gcWriters = map[string]string{
+	"garbled":  "suspect",
+	"gcLabels": "suspect",
+	"otA":      "suspect",
+	"otE":      "suspect",
+	"otR":      "police",
+}
+
+const maxGCMessage = 1 << 20 // 1 MiB, the real messages are a few KiB
+
+func gcPresentLocked(s *session) map[string]bool {
+	out := make(map[string]bool, len(gcWriters))
+	for name := range gcWriters {
+		out[name] = s.GC[name] != ""
+	}
+	return out
+}
+
+func handleGCPut(w http.ResponseWriter, r *http.Request) {
+	s, u, sessionRole := requireSession(w, r)
+	if s == nil {
+		return
+	}
+	name := r.PathValue("name")
+	writer, known := gcWriters[name]
+	if !known {
+		writeError(w, http.StatusNotFound, errors.New("mensaje GC desconocido"))
+		return
+	}
+	var req gcRequest
+	if err := decodeJSON(w, r, &req); err != nil {
+		writeError(w, http.StatusBadRequest, err)
+		return
+	}
+	if !roleMatchesSession(s, u, req.Role) || req.Role != sessionRole || req.Role != writer {
+		writeError(w, http.StatusForbidden, errors.New("este rol no puede enviar ese mensaje"))
+		return
+	}
+	if req.Data == "" || len(req.Data) > maxGCMessage {
+		writeError(w, http.StatusBadRequest, errors.New("mensaje vacío o demasiado grande"))
+		return
+	}
+	if _, err := decodeB64(req.Data); err != nil {
+		writeError(w, http.StatusBadRequest, errors.New("mensaje no es base64 válido"))
+		return
+	}
+
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.E2SAgg == "" {
+		writeError(w, http.StatusConflict, errors.New("las shares aditivas de Δ todavía no están listas"))
+		return
+	}
+	if old := s.GC[name]; old != "" && old != req.Data {
+		writeError(w, http.StatusConflict, errors.New("ese mensaje ya fue enviado con otro contenido"))
+		return
+	}
+	s.GC[name] = req.Data
+	markTargetProcessing(s.TargetID)
+	writeJSON(w, http.StatusOK, messageResponse{OK: true, Message: "mensaje recibido"})
+}
+
+func handleGCGet(w http.ResponseWriter, r *http.Request) {
+	s, _, _ := requireSession(w, r)
+	if s == nil {
+		return
+	}
+	name := r.PathValue("name")
+	if _, known := gcWriters[name]; !known {
+		writeError(w, http.StatusNotFound, errors.New("mensaje GC desconocido"))
+		return
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.GC[name] == "" {
+		writeError(w, http.StatusConflict, errors.New("mensaje todavía no disponible"))
+		return
+	}
+	writeJSON(w, http.StatusOK, gcResponse{Data: s.GC[name]})
 }
 
 func main() {
@@ -1035,11 +1089,12 @@ func main() {
 	mux.HandleFunc("POST /api/sessions/{id}/setup/share", handleSetupShare)
 	mux.HandleFunc("GET /api/sessions/{id}/setup/artifacts", handleSetupArtifacts)
 	mux.HandleFunc("POST /api/sessions/{id}/setup/r2", handleR2)
-	mux.HandleFunc("POST /api/sessions/{id}/output-key", handleOutputKey)
 	mux.HandleFunc("POST /api/sessions/{id}/input", handleInput)
 	mux.HandleFunc("GET /api/sessions/{id}/delta", handleDelta)
-	mux.HandleFunc("POST /api/sessions/{id}/pcks", handlePCKS)
-	mux.HandleFunc("GET /api/sessions/{id}/output", handleOutput)
+	mux.HandleFunc("POST /api/sessions/{id}/e2s", handleE2S)
+	mux.HandleFunc("GET /api/sessions/{id}/e2s", handleE2SAgg)
+	mux.HandleFunc("POST /api/sessions/{id}/gc/{name}", handleGCPut)
+	mux.HandleFunc("GET /api/sessions/{id}/gc/{name}", handleGCGet)
 
 	webDir := os.Getenv("WEB_DIR")
 	if webDir == "" {
