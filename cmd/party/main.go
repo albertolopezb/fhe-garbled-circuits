@@ -298,6 +298,9 @@ func parseCiphertext(encoded string) (*rlwe.Ciphertext, error) {
 }
 
 func encryptPoint(cpkB64 string, x, y int64) response {
+	if x < 0 || x > demo.MaxProximityInput || y < 0 || y > demo.MaxProximityInput {
+		return fail(fmt.Errorf("las coordenadas deben estar entre 0 y %d", demo.MaxProximityInput))
+	}
 	if err := requireInit(); err != nil {
 		return fail(err)
 	}

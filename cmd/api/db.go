@@ -12,6 +12,8 @@ import (
 	"strings"
 	"time"
 
+	"lattigo-auth-ui-demo/internal/demo"
+
 	_ "github.com/mattn/go-sqlite3"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -112,7 +114,7 @@ CREATE INDEX IF NOT EXISTS idx_auth_sessions_token ON auth_sessions(token_hash);
 CREATE INDEX IF NOT EXISTS idx_targets_case ON case_targets(case_id);
 CREATE INDEX IF NOT EXISTS idx_targets_suspect ON case_targets(suspect_user_id);
 `
-	if _, err := db.Exec(schema); err != nil {
+	if _, err := db.Exec(schema + evaluationSchema); err != nil {
 		return err
 	}
 
@@ -280,8 +282,8 @@ func createCaseWithTargets(ctx context.Context, policeID int64, title string, ra
 	if title == "" {
 		return 0, errors.New("el caso necesita un título")
 	}
-	if radius < 0 {
-		return 0, errors.New("radio inválido")
+	if radius < 0 || radius > demo.MaxProximityInput {
+		return 0, fmt.Errorf("el radio debe estar entre 0 y %d", demo.MaxProximityInput)
 	}
 	if err := ensureSuspectIDs(suspectIDs); err != nil {
 		return 0, err
@@ -305,7 +307,7 @@ func createCaseWithTargets(ctx context.Context, policeID int64, title string, ra
 			return 0, err
 		}
 		targetID, _ := res.LastInsertId()
-		s, err := createSession(policeID, suspectID, targetID)
+		s, err := createSession(policeID, suspectID, targetID, caseID, radius)
 		if err != nil {
 			return 0, err
 		}
@@ -320,6 +322,16 @@ func createCaseWithTargets(ctx context.Context, policeID int64, title string, ra
 	return caseID, nil
 }
 
+func deleteCase(ctx context.Context, caseID, policeID int64) (bool, error) {
+	// SQLite cascades to the assignments. Quota entries are independent and expire normally.
+	res, err := db.ExecContext(ctx, `DELETE FROM cases WHERE id=? AND police_user_id=?`, caseID, policeID)
+	if err != nil {
+		return false, err
+	}
+	n, err := res.RowsAffected()
+	return n == 1, err
+}
+
 func markTargetProcessing(targetID int64) {
 	if targetID <= 0 {
 		return
@@ -327,13 +339,13 @@ func markTargetProcessing(targetID int64) {
 	_, _ = db.Exec(`UPDATE case_targets SET status='processing' WHERE id=? AND status='pending'`, targetID)
 }
 
-func saveTargetResult(targetID int64, classification string) error {
+func saveTargetResult(targetID int64, sessionID, classification string) error {
 	switch classification {
 	case "DENTRO DEL RADIO", "FUERA DEL RADIO", "EXACTAMENTE EN EL LIMITE":
 	default:
 		return errors.New("clasificación inválida")
 	}
-	res, err := db.Exec(`UPDATE case_targets SET status='complete', classification=? WHERE id=?`, classification, targetID)
+	res, err := db.Exec(`UPDATE case_targets SET status='complete', classification=? WHERE id=? AND crypto_session_id=? AND (classification IS NULL OR classification=?)`, classification, targetID, sessionID, classification)
 	if err != nil {
 		return err
 	}
@@ -377,7 +389,7 @@ func listCasesForPolice(policeID int64) ([]caseRecord, error) {
 		return nil, err
 	}
 	defer rows.Close()
-	var cases []caseRecord
+	cases := []caseRecord{}
 	for rows.Next() {
 		var c caseRecord
 		if err := rows.Scan(&c.ID, &c.Title, &c.Radius, &c.CreatedAt); err != nil {
@@ -430,7 +442,7 @@ ORDER BY ct.id DESC`, suspectID)
 		return nil, err
 	}
 	defer rows.Close()
-	var out []targetRecord
+	out := []targetRecord{}
 	for rows.Next() {
 		var t targetRecord
 		var classification sql.NullString
@@ -451,6 +463,15 @@ ORDER BY ct.id DESC`, suspectID)
 }
 
 func updateTargetCryptoSession(targetID int64, sessionID string) error {
-	_, err := db.Exec(`UPDATE case_targets SET crypto_session_id=?, status='pending', classification=NULL WHERE id=?`, sessionID, targetID)
+	res, err := db.Exec(`UPDATE case_targets SET crypto_session_id=?, status='pending'
+		WHERE id=? AND status <> 'complete'
+		AND NOT EXISTS (SELECT 1 FROM proximity_evaluations WHERE target_id=?)`, sessionID, targetID, targetID)
+	if err != nil {
+		return err
+	}
+	n, err := res.RowsAffected()
+	if err == nil && n == 0 {
+		return errAssignmentUsed
+	}
 	return err
 }

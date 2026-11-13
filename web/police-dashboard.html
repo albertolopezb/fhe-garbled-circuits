@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Panel Policía · Private Proximity</title>
-  <link rel="stylesheet" href="/style.css" />
+  <link rel="stylesheet" href="/style.css?v=tablero" />
 </head>
 <body>
 <div class="shell">
@@ -12,21 +12,27 @@
     <div class="brand"><span class="brand-mark">PP</span><span>Private Proximity</span></div>
     <div class="user-strip"><a class="demo-nav-link" href="/">Centro demo</a><span id="userName"></span><button class="ghost" id="logoutBtn">Salir</button></div>
   </header>
-  <main class="page">
+  <main class="page police-board">
     <div class="hero">
       <div>
-        <span class="badge">Vista Policía</span>
         <h1>Casos y resultados</h1>
-        <p class="muted">La base de datos almacena usuarios, casos y la clasificación final. Las coordenadas privadas y secret keys no se guardan.</p>
+        <p class="muted">Consulta el estado y la clasificación de cada asignación.</p>
       </div>
       <button id="toggleCreate">+ Nuevo caso</button>
     </div>
+
+    <section class="board-metrics" aria-label="Resumen de casos" id="caseMetrics" hidden>
+      <div class="board-metric metric-cases"><span>Casos</span><strong id="metricCases">0</strong></div>
+      <div class="board-metric metric-pending"><span>Pendientes</span><strong id="metricPending">0</strong></div>
+      <div class="board-metric metric-processing"><span>En proceso</span><strong id="metricProcessing">0</strong></div>
+      <div class="board-metric metric-complete"><span>Completadas</span><strong id="metricComplete">0</strong></div>
+    </section>
 
     <section class="card" id="createCard" hidden>
       <h2>Crear caso</h2>
       <div class="grid">
         <label>Nombre del caso <input id="caseTitle" value="Caso 001 · Escena de prueba" /></label>
-        <label>Radio público R <input id="caseRadius" type="number" min="0" value="1" /></label>
+        <label>Radio público R <input id="caseRadius" type="number" min="0" max="100" step="1" required value="1" /></label>
       </div>
       <p class="muted">Selecciona los usuarios que participarán. Cada persona recibe una sesión criptográfica independiente con la Policía.</p>
       <div id="suspectChecklist" class="check-list"></div>
@@ -38,8 +44,19 @@
       <div class="case-list" id="caseList"><div class="empty">Cargando casos…</div></div>
     </section>
   </main>
+  <dialog class="card delete-dialog" id="deleteCaseDialog" aria-labelledby="deleteCaseHeading">
+    <form id="deleteCaseForm">
+      <h2 id="deleteCaseHeading">Borrar caso</h2>
+      <p>Se borrará <strong id="deleteCaseName"></strong> con sus asignaciones y resultados.</p>
+      <div class="status error" id="deleteCaseError" role="alert" hidden></div>
+      <div class="actions">
+        <button type="button" class="secondary" id="cancelDeleteCase" autofocus>Cancelar</button>
+        <button type="submit" class="danger" id="confirmDeleteCase">Borrar caso</button>
+      </div>
+    </form>
+  </dialog>
 </div>
 <script src="/shared.js"></script>
-<script src="/police-dashboard.js"></script>
+<script src="/police-dashboard.js?v=tablero"></script>
 </body>
 </html>

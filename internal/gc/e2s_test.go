@@ -82,30 +82,10 @@ func (e *env) evalDelta(t *testing.T, px, py, qx, qy, radius int64) *rlwe.Cipher
 	}
 	cPx, cPy, cQx, cQy := ct(px), ct(py), ct(qx), ct(qy)
 	ev := bgv.NewEvaluator(e.params, e.evk, true)
-	must := func(err error) {
-		if err != nil {
-			t.Fatal(err)
-		}
+	delta, err := demo.ProximityDelta(e.params, ev, cPx, cPy, cQx, cQy, radius)
+	if err != nil {
+		t.Fatal(err)
 	}
-	dx, err := ev.SubNew(cPx, cQx)
-	must(err)
-	dy, err := ev.SubNew(cPy, cQy)
-	must(err)
-	mul := func(a, b *rlwe.Ciphertext) *rlwe.Ciphertext {
-		o := bgv.NewCiphertext(e.params, 2, a.Level())
-		must(ev.Mul(a, b, o))
-		must(ev.Relinearize(o, o))
-		return o
-	}
-	dx2, dxdy, dy2 := mul(dx, dx), mul(dx, dy), mul(dy, dy)
-	tmp, err := ev.SubNew(dx2, dxdy)
-	must(err)
-	dist2, err := ev.AddNew(tmp, dy2)
-	must(err)
-	rv := make([]int64, e.params.MaxSlots())
-	rv[0] = radius * radius
-	delta, err := ev.SubNew(dist2, rv)
-	must(err)
 	return delta
 }
 
@@ -145,17 +125,17 @@ func TestE2SSharesFeedCircuit(t *testing.T) {
 	e := setup(t)
 	c := gc.ShareCompareCircuit()
 	cases := []struct{ px, py, qx, qy, r int64 }{
-		{10, 20, 12, 21, 5},  // dx=-2 dy=-1: 4-2+1-25 <0  inside
-		{10, 20, 30, 40, 5},  // far: outside
-		{0, 0, 3, 0, 3},      // dx=-3,dy=0: 9-0+0-9 = 0  exactly on boundary
-		{50, 50, 10, 10, 10}, // dx=dy=40: 1600-1600+1600-100 >0 outside
-		{5, 5, 5, 5, 0},      // same point, radius 0: 0
-		{0, 0, 1, 1, 1},      // dx=dy=-1: 1-1+1-1 = 0
+		{0, 0, 3, 4, 6},     // inside
+		{0, 0, 1, 1, 1},     // outside on Cartesian axes
+		{0, 0, 3, 4, 5},     // exactly on boundary
+		{100, 100, 0, 0, 0}, // maximum Delta
+		{0, 0, 0, 0, 100},   // minimum Delta
+		{5, 5, 5, 5, 0},     // same point, radius zero
 	}
 	for _, tc := range cases {
 		ct := e.evalDelta(t, tc.px, tc.py, tc.qx, tc.qy, tc.r)
 		dx, dy := tc.px-tc.qx, tc.py-tc.qy
-		want := dx*dx - dx*dy + dy*dy - tc.r*tc.r // same formula as the server
+		want := dx*dx + dy*dy - tc.r*tc.r // same formula as the server
 
 		shareP, shareS := e.shareDelta(t, ct)
 		if (shareP+shareS)%gc.Modulus != uint64((want%gc.Modulus+gc.Modulus)%gc.Modulus) {

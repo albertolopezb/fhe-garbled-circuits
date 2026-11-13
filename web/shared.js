@@ -1,4 +1,12 @@
-const AUTH_TOKEN_KEY = "pp_auth_token";
+// Same-origin iframes share sessionStorage. Give every demo role its own key.
+const demoFrameAccount = window.parent !== window
+  ? /^pp-demo-(police|carlos|fer|ximena)$/.exec(window.name)?.[1]
+  : undefined;
+const AUTH_TOKEN_KEY = demoFrameAccount ? `pp_auth_token:demo:${demoFrameAccount}` : "pp_auth_token";
+if (demoFrameAccount) {
+  document.documentElement.classList.add("demo-embedded");
+  document.documentElement.dataset.account = demoFrameAccount;
+}
 
 function getAuthToken() {
   return sessionStorage.getItem(AUTH_TOKEN_KEY) || "";
@@ -15,7 +23,7 @@ async function api(path, options = {}) {
   if (token) headers.Authorization = `Bearer ${token}`;
 
   const res = await fetch(path, {
-    credentials: "same-origin",
+    credentials: demoFrameAccount ? "omit" : "same-origin",
     ...options,
     headers,
   });
@@ -24,9 +32,19 @@ async function api(path, options = {}) {
     if (res.status === 401) {
       setAuthToken("");
       const publicPages = ["/", "/login.html", "/register.html", "/demo-login.html"];
-      if (!publicPages.includes(location.pathname)) location.href = "/login.html";
+      if (!publicPages.includes(location.pathname)) {
+        location.replace(demoFrameAccount
+          ? `/demo-login.html?account=${demoFrameAccount}`
+          : "/login.html");
+      }
     }
-    throw new Error(data.error || `${res.status} ${res.statusText}`);
+    const retryAfter = Number(res.headers.get("Retry-After"));
+    if (res.status === 429 && retryAfter > 0) {
+      throw new Error(`${data.error || "Límite alcanzado"}. Puedes volver a intentar en ${Math.ceil(retryAfter / 60)} min.`);
+    }
+    const error = new Error(data.error || `${res.status} ${res.statusText}`);
+    error.status = res.status;
+    throw error;
   }
   return data;
 }
@@ -67,3 +85,13 @@ function statusPill(status) {
   const [cls, text] = map[status] || ["pending", status];
   return `<span class="pill ${cls}">${text}</span>`;
 }
+
+function escapeHTML(value = "") {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+

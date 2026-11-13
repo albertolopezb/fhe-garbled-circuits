@@ -43,3 +43,12 @@ CREATE TABLE IF NOT EXISTS case_targets (
 CREATE INDEX IF NOT EXISTS idx_auth_sessions_token ON auth_sessions(token_hash);
 CREATE INDEX IF NOT EXISTS idx_targets_case ON case_targets(case_id);
 CREATE INDEX IF NOT EXISTS idx_targets_suspect ON case_targets(suspect_user_id);
+
+CREATE TABLE IF NOT EXISTS proximity_evaluations (
+    target_id INTEGER PRIMARY KEY,
+    police_user_id INTEGER NOT NULL,
+    suspect_user_id INTEGER NOT NULL,
+    evaluated_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_proximity_pair_time
+ON proximity_evaluations(police_user_id, suspect_user_id, evaluated_at);

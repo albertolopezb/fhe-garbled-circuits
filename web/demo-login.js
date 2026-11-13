@@ -12,21 +12,32 @@ const statusEl = document.getElementById("status");
 async function bootDemoAccount() {
   const accountName = new URLSearchParams(location.search).get("account") || "";
   const account = demoAccounts[accountName];
-  if (!account) throw new Error("Cuenta demo inválida");
+  if (!account || (demoFrameAccount && demoFrameAccount !== accountName)) {
+    throw new Error("Cuenta demo inválida para este panel.");
+  }
 
   loadingTitle.textContent = `Abriendo ${account.label}`;
-  loadingText.textContent = "Esta pestaña tendrá su propio token y su propia instancia criptográfica.";
+  loadingText.textContent = "Conectando con la cuenta demo…";
 
-  // Evita heredar una sesión de la pestaña que abrió esta ventana.
+  if (demoFrameAccount && getAuthToken()) {
+    try {
+      const user = await me();
+      if (user.email === account.email) {
+        location.replace(account.next);
+        return;
+      }
+    } catch (err) {
+      if (getAuthToken()) throw err;
+    }
+  }
+
   setAuthToken("");
-  const data = await loginWithCredentials(account.email, account.password);
-  statusEl.className = "status ok";
-  statusEl.textContent = `Sesión independiente creada para ${data.user.displayName}. Redirigiendo…`;
-  setTimeout(() => location.replace(account.next), 350);
+  await loginWithCredentials(account.email, account.password);
+  location.replace(account.next);
 }
 
 bootDemoAccount().catch(err => {
   statusEl.className = "status error";
   statusEl.textContent = err.message;
-  loadingText.textContent = "Vuelve al Demo Control Center e intenta de nuevo.";
+  loadingText.textContent = "Vuelve a cargar la demo e intenta de nuevo.";
 });

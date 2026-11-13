@@ -9,13 +9,13 @@ const resultEl = document.getElementById("result");
 
 let role = "";
 let sessionId = "";
-let radius = 0;
 let context;
 let currentCRSSeed = "";
 let localInitialized = false;
 let r2Sent = false;
 let cpk = "";
 let inputSent = false;
+let sendingInput = false;
 let e2sSent = false;
 let shareDone = false;
 let resultShown = false;
@@ -224,21 +224,27 @@ async function advanceSetup(st) {
     }
     cryptoStatus.className = "status ok";
     cryptoStatus.textContent = "Collective Public Key y Collective RLK listas.";
-    if (!inputSent) sendBtn.disabled = false;
+    if (!inputSent && !sendingInput) {
+      const canSend = role === "police" || st.inputSubmitted?.police;
+      sendBtn.disabled = !canSend;
+      if (!canSend) cryptoStatus.textContent = "Esperando a que Policía fije el punto de referencia.";
+    }
   }
 }
 
 async function sendEncryptedInput() {
-  if (!cpk || !localInitialized) return;
+  if (!cpk || !localInitialized || inputSent || sendingInput || sendBtn.disabled) return;
+  sendingInput = true;
   sendBtn.disabled = true;
   try {
-    const x = Number(document.getElementById("x").value);
-    const y = Number(document.getElementById("y").value);
-    if (!Number.isInteger(x) || !Number.isInteger(y)) throw new Error("Las coordenadas deben ser enteros");
+    const x = document.getElementById("x").valueAsNumber;
+    const y = document.getElementById("y").valueAsNumber;
+    if (![x, y].every(value => Number.isInteger(value) && value >= 0 && value <= 100)) {
+      throw new Error("Ingresa coordenadas enteras entre 0 y 100.");
+    }
 
     const enc = wasmCall({ op: "encryptPoint", cpk, x, y });
-    const payload = { role, ctX: enc.ctX, ctY: enc.ctY };
-    if (role === "police") payload.radius = radius;
+    const payload = { role, ctX: enc.ctX, ctY: enc.ctY, crsSeed: currentCRSSeed };
 
     await api(`/api/sessions/${sessionId}/input`, {
       method: "POST",
@@ -253,7 +259,9 @@ async function sendEncryptedInput() {
     log(`[ERROR INPUT] ${err.message}`);
     resultEl.className = "status error";
     resultEl.textContent = err.message;
-    sendBtn.disabled = false;
+    sendBtn.disabled = inputSent;
+  } finally {
+    sendingInput = false;
   }
 }
 
@@ -334,21 +342,20 @@ async function advanceCircuit(st) {
   if (gm.garbled && gm.gcLabels && gm.otE && !resultShown) {
     const [garbled, gcLabels, otE] = await Promise.all([getGC("garbled"), getGC("gcLabels"), getGC("otE")]);
     const final = wasmCall({ op: "gcEvaluate", garbled, gcLabels, otE });
+    await api(`/api/targets/${targetId}/result`, {
+      method: "POST",
+      body: JSON.stringify({ classification: final.classification, crsSeed: currentCRSSeed }),
+    });
     resultShown = true;
     resultEl.className = "status ok";
     resultEl.textContent = final.classification;
-    log("[GC] Circuito evaluado localmente. Solo se decodificó el bit de resultado.");
-    log(`[RESULTADO] ${final.classification}. Δ nunca se reconstruyó ni se guarda en la base de datos.`);
-
-    await api(`/api/targets/${targetId}/result`, {
-      method: "POST",
-      body: JSON.stringify({ classification: final.classification }),
-    });
+    log(`[RESULTADO] ${final.classification}`);
   }
 }
 
 function updateStatus(st) {
-  const phase = st.gcMessages?.otE ? "circuito evaluado" : st.e2sReady ? "shares de Δ listas" : st.deltaReady ? "evaluación lista" : st.setupReady ? "setup listo" : "setup en progreso";
+  if (st.deltaReady) resetBtn.hidden = true;
+  const phase = st.gcMessages?.otE ? "mensajes del circuito listos" : st.e2sReady ? "shares de Δ listas" : st.deltaReady ? "evaluación lista" : st.setupReady ? "setup listo" : "setup en progreso";
   sessionStatus.textContent = `Sesión activa · ${phase} · servidor con secret keys: NO`;
 
   if (!st.setupReady && localInitialized) {
@@ -367,7 +374,7 @@ function updateStatus(st) {
 }
 
 async function tick() {
-  if (ticking || !sessionId) return;
+  if (ticking || !sessionId || resultShown) return;
   ticking = true;
   try {
     const st = await state();
@@ -392,6 +399,14 @@ async function tick() {
     if (localInitialized) await advanceCircuit(st3);
   } catch (err) {
     log(`[POLL] ${err.message}`);
+    if (err.status === 404) {
+      sessionId = "";
+      initBtn.disabled = sendBtn.disabled = true;
+      resetBtn.hidden = true;
+      sessionStatus.textContent = "Sesión no disponible";
+      resultEl.className = "status error";
+      resultEl.textContent = "Esta sesión ya no está disponible. Vuelve al panel para ver tus casos o solicitudes.";
+    }
   } finally {
     ticking = false;
   }
@@ -407,7 +422,6 @@ function configureUI(u) {
   caseName.textContent = context.target.caseTitle;
   otherName.textContent = context.otherPartyName;
   radiusText.textContent = `R = ${context.target.radius}`;
-  radius = context.target.radius;
   backLink.href = role === "police" ? "/police-dashboard.html" : "/suspect-dashboard.html";
 
   if (role === "police") {
@@ -416,7 +430,8 @@ function configureUI(u) {
     yLabel.firstChild.textContent = "Py ";
     x.value = 10; y.value = 20;
   } else {
-    inputTitle.textContent = "2. Cifrar mi ubicación";
+    inputTitle.textContent = "2. Autorizar evaluación de proximidad";
+    sendBtn.textContent = "Autorizar y enviar ubicación cifrada";
     xLabel.firstChild.textContent = "Qx ";
     yLabel.firstChild.textContent = "Qy ";
     x.value = 12; y.value = 21;
@@ -431,6 +446,14 @@ async function boot() {
   role = context.role;
   sessionId = context.target.cryptoSession;
   configureUI(u);
+  if (context.target.status === "complete") {
+    sessionStatus.textContent = "Evaluación completada";
+    resultEl.textContent = context.target.classification || "Tu participación terminó.";
+    initBtn.disabled = true;
+    sendBtn.disabled = true;
+    resetBtn.hidden = true;
+    return;
+  }
 
   const st = await state();
   currentCRSSeed = st.crsSeed;
@@ -481,6 +504,15 @@ toggleConsole.onclick = () => {
   consolePanel.hidden = !consolePanel.hidden;
   toggleConsole.textContent = consolePanel.hidden ? "Ver consola" : "Ocultar consola";
 };
+if (demoFrameAccount) {
+  window.addEventListener("message", event => {
+    if (event.source === window.parent && event.origin === location.origin &&
+        event.data === "pp-demo-pane-active") {
+      void tick();
+    }
+  });
+}
+
 initBtn.addEventListener("click", initializeLocalCrypto);
 sendBtn.addEventListener("click", sendEncryptedInput);
 resetBtn.addEventListener("click", resetCryptoSession);

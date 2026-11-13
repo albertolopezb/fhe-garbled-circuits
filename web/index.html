@@ -2,89 +2,39 @@
 <html lang="es">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Demo Control Center · Private Proximity</title>
-  <link rel="stylesheet" href="/style.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Demo · Private Proximity</title>
+  <link rel="stylesheet" href="/style.css?v=tablero" />
 </head>
-<body>
-<div class="shell">
+<body class="demo-workspace" data-active-suspect="carlos">
   <header class="topbar">
-    <div class="brand"><span class="brand-mark">PP</span><span>Private Proximity</span></div>
-    <div class="user-strip"><a class="button secondary" href="/login.html">Modo normal · Login</a></div>
+    <div class="brand console-brand"><span class="brand-mark" aria-hidden="true">◇</span><span>PROTECT</span><span class="console-brand-divider"></span><span class="console-brand-subtitle">Proximidad privada</span></div>
+    <a class="button secondary" href="/login.html">Modo normal</a>
   </header>
-
-  <main class="page demo-center-page">
-    <section class="demo-hero">
-      <div>
-        <span class="badge">Demo Control Center</span>
-        <h1>Abre cada rol en su propia pestaña</h1>
-        <p class="muted demo-lead">Cada vista crea una sesión independiente en <code>sessionStorage</code>. Las secret keys permanecen dentro del WASM de la pestaña correspondiente.</p>
-      </div>
-      <button id="openAllBtn" class="button demo-primary">Abrir todas las vistas</button>
-    </section>
-
-    <div id="demoStatus" class="status" hidden></div>
-
-    <section class="demo-grid">
-      <article class="demo-role-card police-card">
-        <div class="role-icon">👮</div>
-        <div>
-          <span class="badge">Policía</span>
-          <h2>Oficial Demo</h2>
-          <p class="muted">Crea el caso, configura el radio y recibe únicamente la clasificación final de cada persona.</p>
+  <main class="demo-workspace-main">
+    <div class="workspace-nav"><span class="workspace-nav-current"><span aria-hidden="true">◇</span> Vista de casos</span></div>
+    <div class="demo-split">
+      <section class="demo-pane" aria-labelledby="policeHeading">
+        <div class="demo-pane-bar">
+          <h1 id="policeHeading">Policía</h1>
         </div>
-        <button class="secondary open-role" data-account="police">Abrir vista Policía</button>
-      </article>
-
-      <article class="demo-role-card">
-        <div class="role-icon">CM</div>
-        <div>
-          <span class="badge">Usuario 01</span>
-          <h2>Carlos Mendoza</h2>
-          <p class="muted">Ingresa su ubicación privada y participa en su propia sesión multiparty con Policía.</p>
+        <iframe class="demo-frame" name="pp-demo-police" title="Panel de Policía" src="/demo-login.html?account=police"></iframe>
+      </section>
+      <section class="demo-pane" aria-labelledby="suspectHeading">
+        <div class="demo-pane-bar">
+          <h2 id="suspectHeading">Sospechosos</h2>
+          <div class="demo-picker" role="group" aria-label="Seleccionar sospechoso">
+            <button type="button" class="secondary" data-account="carlos" aria-pressed="true" aria-controls="demo-carlos">Carlos</button>
+            <button type="button" class="secondary" data-account="fer" aria-pressed="false" aria-controls="demo-fer">Fer</button>
+            <button type="button" class="secondary" data-account="ximena" aria-pressed="false" aria-controls="demo-ximena">Ximena</button>
+          </div>
         </div>
-        <button class="secondary open-role" data-account="carlos">Abrir Carlos</button>
-      </article>
-
-      <article class="demo-role-card">
-        <div class="role-icon">FS</div>
-        <div>
-          <span class="badge">Usuario 02</span>
-          <h2>Fernanda Santos</h2>
-          <p class="muted">Su secret key y coordenadas en claro nunca salen de su pestaña.</p>
-        </div>
-        <button class="secondary open-role" data-account="fer">Abrir Fer</button>
-      </article>
-
-      <article class="demo-role-card">
-        <div class="role-icon">XV</div>
-        <div>
-          <span class="badge">Usuario 03</span>
-          <h2>Ximena Villarreal</h2>
-          <p class="muted">Puede trabajar al mismo tiempo que los otros usuarios sin reemplazar sus sesiones.</p>
-        </div>
-        <button class="secondary open-role" data-account="ximena">Abrir Ximena</button>
-      </article>
-    </section>
-
-    <section class="card demo-howto">
-      <div class="case-header">
-        <div>
-          <h2 style="margin-bottom:4px">Flujo recomendado de la demo</h2>
-          <p class="muted" style="margin:0">No necesitas cerrar sesión para cambiar de usuario.</p>
-        </div>
-        <span class="badge">4 pestañas simultáneas</span>
-      </div>
-      <div class="demo-steps">
-        <div><span>1</span><p><strong>Abre todas las vistas.</strong><br><span class="muted">Cada pestaña inicia automáticamente con su cuenta demo.</span></p></div>
-        <div><span>2</span><p><strong>En Policía crea un caso.</strong><br><span class="muted">Selecciona Carlos, Fer y Ximena.</span></p></div>
-        <div><span>3</span><p><strong>Cada usuario abre su sesión segura.</strong><br><span class="muted">Inicializa CPK/RLK, cifra su ubicación y envía ciphertexts.</span></p></div>
-        <div><span>4</span><p><strong>Regresa a Policía.</strong><br><span class="muted">El dashboard se actualiza automáticamente con el estado y el resultado.</span></p></div>
-      </div>
-      <div class="notice">La consola criptográfica de cada sesión muestra el flujo interno sin revelar coordenadas, secret keys, D² ni Δ.</div>
-    </section>
+        <iframe class="demo-frame" id="demo-carlos" name="pp-demo-carlos" title="Panel de Carlos Mendoza" src="/demo-login.html?account=carlos"></iframe>
+        <iframe class="demo-frame" id="demo-fer" name="pp-demo-fer" title="Panel de Fernanda Santos" src="/demo-login.html?account=fer" hidden></iframe>
+        <iframe class="demo-frame" id="demo-ximena" name="pp-demo-ximena" title="Panel de Ximena Villarreal" src="/demo-login.html?account=ximena" hidden></iframe>
+      </section>
+    </div>
   </main>
-</div>
-<script src="/demo.js"></script>
+  <script src="/demo.js?v=tablero"></script>
 </body>
 </html>

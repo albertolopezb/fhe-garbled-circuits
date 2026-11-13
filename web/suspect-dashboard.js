@@ -14,7 +14,7 @@ async function loadAssignments() {
   list.innerHTML = data.assignments.map(t => `
     <article class="card">
       <div class="case-header">
-        <div><h2 style="margin-bottom:4px">${t.caseTitle}</h2><span class="muted">Solicitado por ${t.policeName} · R = ${t.radius}</span></div>
+        <div><h2 style="margin-bottom:4px">${escapeHTML(t.caseTitle)}</h2><span class="muted">Solicitado por ${escapeHTML(t.policeName)} · R = ${t.radius}</span></div>
         ${statusPill(t.status)}
       </div>
       <p class="muted">Tu ubicación se cifra localmente. La API recibirá únicamente ciphertexts y shares del protocolo.</p>
@@ -24,5 +24,5 @@ async function loadAssignments() {
     </article>`).join("");
 }
 
-loadAssignments().catch(err => list.innerHTML = `<div class="status error">${err.message}</div>`);
+loadAssignments().catch(err => list.innerHTML = `<div class="status error">${escapeHTML(err.message)}</div>`);
 setInterval(() => loadAssignments().catch(()=>{}), 3000);

@@ -3,6 +3,15 @@ const createCard = document.getElementById("createCard");
 const checklist = document.getElementById("suspectChecklist");
 const createStatus = document.getElementById("createStatus");
 let currentUser;
+const caseMetrics = document.getElementById("caseMetrics");
+const mapPreferences = new Map();
+let lastCases = null;
+const deleteDialog = document.getElementById("deleteCaseDialog");
+const deleteForm = document.getElementById("deleteCaseForm");
+const deleteName = document.getElementById("deleteCaseName");
+const deleteError = document.getElementById("deleteCaseError");
+const cancelDelete = document.getElementById("cancelDeleteCase");
+const confirmDelete = document.getElementById("confirmDeleteCase");
 
 async function loadPolice() {
   currentUser = await me();
@@ -22,7 +31,7 @@ async function loadSuspects() {
   checklist.innerHTML = data.users.map(u => `
     <label class="check-row">
       <input type="checkbox" value="${u.id}" checked />
-      <span><strong>${u.displayName}</strong><br><span class="muted">${u.email}</span></span>
+      <span><strong>${escapeHTML(u.displayName)}</strong><br><span class="muted">${escapeHTML(u.email)}</span></span>
     </label>`).join("");
 }
 
@@ -30,8 +39,8 @@ function personRow(t) {
   return `
     <div class="person-row">
       <div class="person">
-        <div class="avatar">${initials(t.suspectName)}</div>
-        <div class="person-meta"><strong>${t.suspectName}</strong><span>${t.suspectEmail}</span></div>
+        <div class="avatar">${escapeHTML(initials(t.suspectName))}</div>
+        <div class="person-meta"><strong>${escapeHTML(t.suspectName)}</strong><span>${escapeHTML(t.suspectEmail)}</span></div>
       </div>
       <div>${statusPill(t.status)}</div>
       <div>${resultPill(t.classification)}</div>
@@ -105,23 +114,14 @@ function visualPosition(caseData, target, index, centerX, centerY, radius) {
   };
 }
 
-function escapeSvgText(value = "") {
-  return String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-
 function mapColors(kind) {
   // Consistente con los pills actuales: dentro = alerta roja, fuera = verde.
-  if (kind === "inside") return { fill: "#dc2626", stroke: "#991b1b" };
-  if (kind === "outside") return { fill: "#10b981", stroke: "#047857" };
-  return { fill: "#f59e0b", stroke: "#92400e" };
+  if (kind === "inside") return { fill: "#f2635e", stroke: "#9f4948" };
+  if (kind === "outside") return { fill: "#4fb58a", stroke: "#387b61" };
+  return { fill: "#e9a23b", stroke: "#956724" };
 }
 
-function renderCaseMap(caseData) {
+function renderCaseMap(caseData, mapOpen) {
   const targets = caseData.targets || [];
   const width = 760;
   const height = 440;
@@ -139,47 +139,53 @@ function renderCaseMap(caseData) {
     const pos = visualPosition(caseData, target, index, centerX, centerY, radius);
     if (!pos) return "";
     const colors = mapColors(pos.kind);
-    const name = escapeSvgText(target.suspectName || "Usuario");
-    const shortName = escapeSvgText((target.suspectName || "Usuario").split(/\s+/)[0]);
-    const labelInitials = escapeSvgText(initials(target.suspectName || "?"));
+    const name = escapeHTML(target.suspectName || "Usuario");
+    const shortName = escapeHTML((target.suspectName || "Usuario").split(/\s+/)[0]);
+    const labelInitials = escapeHTML(initials(target.suspectName || "?"));
 
     return `
       <g class="map-person-node" transform="translate(${pos.x.toFixed(1)}, ${pos.y.toFixed(1)})" aria-label="${name}: ${mapStatusLabel(pos.kind)}">
         <circle class="map-person-halo" cx="0" cy="0" r="27" fill="${colors.fill}" opacity="0.12"></circle>
         <circle cx="0" cy="0" r="20" fill="${colors.fill}" stroke="${colors.stroke}" stroke-width="3"></circle>
-        <text x="0" y="5" text-anchor="middle" font-size="10.5" font-weight="800" fill="#ffffff">${labelInitials}</text>
-        <rect x="-38" y="27" width="76" height="22" rx="11" fill="#ffffff" stroke="#dbe3ef"></rect>
-        <text x="0" y="42" text-anchor="middle" font-size="11" font-weight="700" fill="#0f172a">${shortName}</text>
+        <text x="0" y="5" text-anchor="middle" font-size="10.5" font-weight="800" fill="#17171b">${labelInitials}</text>
+        <rect x="-38" y="27" width="76" height="22" rx="11" fill="#17171b" stroke="#3a3a40"></rect>
+        <text x="0" y="42" text-anchor="middle" font-size="11" font-weight="700" fill="#f2f2f3">${shortName}</text>
       </g>`;
   }).join("");
 
   const emptyText = completed.length === 0
-    ? `<g><text x="${centerX}" y="${centerY + radius + 72}" text-anchor="middle" font-size="13" fill="#64748b">Los usuarios aparecerán cuando exista una clasificación.</text></g>`
+    ? `<g><text x="${centerX}" y="${centerY + radius + 72}" text-anchor="middle" font-size="13" fill="#a5a5ad">Los usuarios aparecerán cuando exista una clasificación.</text></g>`
     : "";
 
   const svg = `
     <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Representación ilustrativa del radio de proximidad">
       <defs>
         <pattern id="grid-${caseData.id}" width="32" height="32" patternUnits="userSpaceOnUse">
-          <path d="M 32 0 L 0 0 0 32" fill="none" stroke="#dbe3ef" stroke-width="1" opacity="0.45"></path>
+          <path d="M 32 0 L 0 0 0 32" fill="none" stroke="#3a3a40" stroke-width="1" opacity="0.45"></path>
         </pattern>
       </defs>
-      <rect x="0" y="0" width="${width}" height="${height}" rx="18" fill="#f8fbff"></rect>
+      <rect x="0" y="0" width="${width}" height="${height}" rx="18" fill="#0d0d0f"></rect>
       <rect x="0" y="0" width="${width}" height="${height}" rx="18" fill="url(#grid-${caseData.id})"></rect>
 
-      <circle cx="${centerX}" cy="${centerY}" r="${radius + 12}" fill="#2563eb" opacity="0.045"></circle>
-      <circle cx="${centerX}" cy="${centerY}" r="${radius}" fill="#2563eb" fill-opacity="0.075" stroke="#2563eb" stroke-width="3" stroke-dasharray="9 8"></circle>
+      <g fill="none" stroke="#333238" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M-20 310 95 272 165 258 232 268 312 295 382 314 452 304 541 266 636 252 780 278" stroke-width="12" opacity=".36"></path>
+        <path d="M-10 100 95 93 177 110 258 80 356 86 475 45 623 53 782 12 M-8 224 95 207 181 216 280 185 384 192 502 167 626 181 784 148 M-12 378 82 359 175 369 291 342 402 362 524 347 649 315 777 323" stroke-width="4"></path>
+        <path d="M55-10 77 55 95 93 109 170 95 207 95 272 82 359 87 455 M170-10 164 53 177 110 195 164 181 216 165 258 175 369 156 455 M302-12 279 46 258 80 268 138 280 185 277 259 291 342 307 455 M414-16 400 46 394 76 379 141 384 192 398 257 382 314 402 362 436 456 M545-15 538 48 519 110 502 167 513 216 541 266 524 347 546 455 M658-15 623 53 631 115 626 181 636 252 649 315 686 455" stroke-width="3"></path>
+        <path d="M109 170 195 164 268 138 379 141 519 110 631 115 779 88 M-10 165 109 170 M277 259 398 257 513 216 632 220 784 213 M180 404 306 411 419 405 532 396 668 392 781 365" stroke-width="2" opacity=".7"></path>
+      </g>
+      <circle cx="${centerX}" cy="${centerY}" r="${radius + 12}" fill="#a87ef5" opacity="0.045"></circle>
+      <circle cx="${centerX}" cy="${centerY}" r="${radius}" fill="#a87ef5" fill-opacity="0.075" stroke="#a87ef5" stroke-width="3" stroke-dasharray="9 8"></circle>
 
       <g class="crime-scene-node">
-        <circle cx="${centerX}" cy="${centerY}" r="24" fill="#0f172a"></circle>
-        <text x="${centerX}" y="${centerY + 6}" text-anchor="middle" font-size="20" fill="#ffffff">★</text>
-        <rect x="${centerX - 70}" y="${centerY + 34}" width="140" height="26" rx="13" fill="#ffffff" stroke="#dbe3ef"></rect>
-        <text x="${centerX}" y="${centerY + 52}" text-anchor="middle" font-size="12" font-weight="800" fill="#0f172a">ESCENA DEL CRIMEN</text>
+        <circle cx="${centerX}" cy="${centerY}" r="24" fill="#241c32" stroke="#a87ef5" stroke-width="2"></circle>
+        <text x="${centerX}" y="${centerY + 6}" text-anchor="middle" font-size="20" fill="#e3d6fc">★</text>
+        <rect x="${centerX - 70}" y="${centerY + 34}" width="140" height="26" rx="13" fill="#17171b" stroke="#3a3a40"></rect>
+        <text x="${centerX}" y="${centerY + 52}" text-anchor="middle" font-size="12" font-weight="800" fill="#f2f2f3">ESCENA DEL CRIMEN</text>
       </g>
 
       <g>
-        <rect x="${centerX + radius - 17}" y="${centerY - 13}" width="74" height="26" rx="13" fill="#eff6ff" stroke="#bfdbfe"></rect>
-        <text x="${centerX + radius + 20}" y="${centerY + 5}" text-anchor="middle" font-size="12" font-weight="800" fill="#1d4ed8">R = ${escapeSvgText(caseData.radius)}</text>
+        <rect x="${centerX + radius - 17}" y="${centerY - 13}" width="74" height="26" rx="13" fill="#241c32" stroke="#604387"></rect>
+        <text x="${centerX + radius + 20}" y="${centerY + 5}" text-anchor="middle" font-size="12" font-weight="800" fill="#e3d6fc">R = ${escapeHTML(caseData.radius)}</text>
       </g>
 
       ${peopleSvg}
@@ -191,9 +197,9 @@ function renderCaseMap(caseData) {
     return `
       <div class="legend-item">
         <div class="legend-person">
-          <div class="legend-avatar">${initials(target.suspectName)}</div>
+          <div class="legend-avatar">${escapeHTML(initials(target.suspectName))}</div>
           <div class="legend-copy">
-            <strong>${target.suspectName}</strong>
+            <strong>${escapeHTML(target.suspectName)}</strong>
             <span>${kind === "pending" || kind === "processing" ? "Aún no se posiciona" : "Posición ilustrativa"}</span>
           </div>
         </div>
@@ -202,7 +208,7 @@ function renderCaseMap(caseData) {
   }).join("");
 
   return `
-    <section class="case-visualization" data-case-map="${caseData.id}" hidden>
+    <section class="case-visualization" data-case-map="${caseData.id}" ${mapOpen ? "" : "hidden"}>
       <div class="map-summary-row">
         <div>
           <h3>Mapa ilustrativo de proximidad</h3>
@@ -211,6 +217,7 @@ function renderCaseMap(caseData) {
         <div class="map-counts" aria-label="Resumen de resultados">
           <span class="map-count inside-count"><strong>${counts.inside}</strong> dentro</span>
           <span class="map-count outside-count"><strong>${counts.outside}</strong> fuera</span>
+          <span class="map-count boundary-count"><strong>${counts.boundary}</strong> al límite</span>
           <span class="map-count pending-count"><strong>${counts.pending + counts.processing}</strong> pendientes</span>
         </div>
       </div>
@@ -229,55 +236,75 @@ function renderCaseMap(caseData) {
     </section>`;
 }
 
-function caseCard(c) {
+function caseCard(c, mapOpen) {
   return `
     <article class="card case-card" data-case-id="${c.id}">
       <div class="case-header">
         <div>
-          <h2 style="margin-bottom:4px">${c.title}</h2>
+          <h2 style="margin-bottom:4px">${escapeHTML(c.title)}</h2>
           <span class="muted">Radio público R = ${c.radius}</span>
         </div>
         <div class="case-header-actions">
           <span class="badge">${c.targets.length} participante${c.targets.length === 1 ? "" : "s"}</span>
-          <button class="secondary map-toggle" type="button" data-map-toggle="${c.id}" aria-expanded="false">Ver mapa ilustrativo</button>
+          <button class="secondary map-toggle" type="button" data-map-toggle="${c.id}" aria-expanded="${mapOpen}">${mapOpen ? "Ocultar mapa" : "Ver mapa ilustrativo"}</button>
+          <button class="secondary danger" type="button" data-delete-case="${c.id}">Borrar caso</button>
         </div>
       </div>
-      <div class="person-list">${c.targets.map(personRow).join("")}</div>
-      ${renderCaseMap(c)}
+      <div class="case-content ${mapOpen ? "with-map" : ""}">
+        <section class="case-participants" aria-label="Participantes del caso">
+          <h3>Participantes</h3>
+          <div class="person-list">${c.targets.map(personRow).join("")}</div>
+        </section>
+        ${renderCaseMap(c, mapOpen)}
+      </div>
     </article>`;
+}
+
+function updateCaseMetrics(cases) {
+  const totals = { pending: 0, processing: 0, complete: 0 };
+  for (const { targets } of cases) {
+    for (const { status } of targets) {
+      if (Object.hasOwn(totals, status)) totals[status]++;
+    }
+  }
+  document.getElementById("metricCases").textContent = cases.length;
+  document.getElementById("metricPending").textContent = totals.pending;
+  document.getElementById("metricProcessing").textContent = totals.processing;
+  document.getElementById("metricComplete").textContent = totals.complete;
+  caseMetrics.hidden = false;
 }
 
 async function loadCases() {
   try {
-    const data = await api("/api/police/cases");
-    if (!data.cases.length) {
+    const { cases } = await api("/api/police/cases");
+    const snapshot = JSON.stringify(cases);
+    if (snapshot === lastCases) return;
+    lastCases = snapshot;
+    updateCaseMetrics(cases);
+    if (!cases.length) {
       caseList.innerHTML = '<div class="empty">Todavía no hay casos. Crea el primero para comenzar.</div>';
       return;
     }
 
-    // Conserva qué mapas estaban abiertos aunque el dashboard haga polling.
-    const openMaps = new Set(
-      [...caseList.querySelectorAll("[data-case-map]:not([hidden])")]
-        .map(el => String(el.dataset.caseMap))
-    );
-
-    caseList.innerHTML = data.cases.map(caseCard).join("");
-
-    for (const id of openMaps) {
-      const panel = caseList.querySelector(`[data-case-map="${CSS.escape(id)}"]`);
-      const button = caseList.querySelector(`[data-map-toggle="${CSS.escape(id)}"]`);
-      if (panel && button) {
-        panel.hidden = false;
-        button.textContent = "Ocultar mapa";
-        button.setAttribute("aria-expanded", "true");
-      }
-    }
+    caseList.innerHTML = cases.map((c, index) =>
+      caseCard(c, mapPreferences.get(String(c.id)) ?? index === 0)
+    ).join("");
   } catch (err) {
-    caseList.innerHTML = `<div class="status error">${err.message}</div>`;
+    lastCases = null;
+    caseList.innerHTML = `<div class="status error">${escapeHTML(err.message)}</div>`;
   }
 }
 
 caseList.addEventListener("click", event => {
+  const deleteButton = event.target.closest("[data-delete-case]");
+  if (deleteButton) {
+    deleteForm.dataset.caseId = deleteButton.dataset.deleteCase;
+    deleteName.textContent = deleteButton.closest(".case-card").querySelector("h2").textContent;
+    deleteError.hidden = true;
+    deleteDialog.showModal();
+    return;
+  }
+
   const button = event.target.closest("[data-map-toggle]");
   if (!button) return;
 
@@ -287,10 +314,34 @@ caseList.addEventListener("click", event => {
 
   panel.hidden = !panel.hidden;
   const open = !panel.hidden;
+  mapPreferences.set(id, open);
+  panel.closest(".case-content").classList.toggle("with-map", open);
   button.textContent = open ? "Ocultar mapa" : "Ver mapa ilustrativo";
   button.setAttribute("aria-expanded", String(open));
 
   if (open) panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+});
+
+cancelDelete.onclick = () => deleteDialog.close();
+deleteDialog.addEventListener("cancel", event => {
+  if (confirmDelete.disabled) event.preventDefault();
+});
+deleteForm.addEventListener("submit", async event => {
+  event.preventDefault();
+  if (confirmDelete.disabled) return;
+  confirmDelete.disabled = cancelDelete.disabled = true;
+  deleteError.hidden = true;
+  try {
+    await api(`/api/police/cases/${encodeURIComponent(deleteForm.dataset.caseId)}`, { method: "DELETE" });
+    mapPreferences.delete(deleteForm.dataset.caseId);
+    deleteDialog.close();
+    await loadCases();
+  } catch (err) {
+    deleteError.textContent = err.message;
+    deleteError.hidden = false;
+  } finally {
+    confirmDelete.disabled = cancelDelete.disabled = false;
+  }
 });
 
 toggleCreate.onclick = () => createCard.hidden = false;
@@ -313,4 +364,4 @@ createCaseBtn.onclick = async () => {
   }
 };
 
-loadPolice().catch(err => { caseList.innerHTML = `<div class="status error">${err.message}</div>`; });
+loadPolice().catch(err => { caseList.innerHTML = `<div class="status error">${escapeHTML(err.message)}</div>`; });

@@ -27,9 +27,8 @@ import (
 const maxJSONBody = 64 << 20 // 64 MiB, suficiente para los artefactos serializados de la demo.
 
 type encryptedInput struct {
-	CTX    string
-	CTY    string
-	Radius int64
+	CTX string
+	CTY string
 }
 
 type session struct {
@@ -41,6 +40,8 @@ type session struct {
 	PoliceUserID  int64
 	SuspectUserID int64
 	TargetID      int64
+	CaseID        int64
+	Radius        int64
 	Params        bgv.Parameters
 	CRPCKG        multiparty.PublicKeyGenCRP
 	CRPRKG        multiparty.RelinearizationKeyGenCRP
@@ -84,10 +85,10 @@ type r2Request struct {
 }
 
 type inputRequest struct {
-	Role   string `json:"role"`
-	CTX    string `json:"ctX"`
-	CTY    string `json:"ctY"`
-	Radius int64  `json:"radius,omitempty"`
+	Role    string `json:"role"`
+	CTX     string `json:"ctX"`
+	CTY     string `json:"ctY"`
+	CRSSeed string `json:"crsSeed"`
 }
 
 type e2sRequest struct {
@@ -168,7 +169,7 @@ func randomToken(bytesN int) (string, error) {
 	return base64.RawURLEncoding.EncodeToString(b), nil
 }
 
-func createSession(policeUserID, suspectUserID, targetID int64) (*session, error) {
+func createSession(policeUserID, suspectUserID, targetID, caseID, radius int64) (*session, error) {
 	id, err := randomToken(18)
 	if err != nil {
 		return nil, err
@@ -197,6 +198,8 @@ func createSession(policeUserID, suspectUserID, targetID int64) (*session, error
 		PoliceUserID:  policeUserID,
 		SuspectUserID: suspectUserID,
 		TargetID:      targetID,
+		CaseID:        caseID,
+		Radius:        radius,
 		Params:        params,
 		CRPCKG:        crpCKG,
 		CRPRKG:        crpRKG,
@@ -399,9 +402,6 @@ func evaluateIfReadyLocked(s *session) error {
 
 	p := s.Inputs["police"]
 	q := s.Inputs["suspect"]
-	if p.Radius < 0 {
-		return fmt.Errorf("radio negativo")
-	}
 
 	ctPx, err := parseCiphertext(s.Params, p.CTX)
 	if err != nil {
@@ -421,58 +421,16 @@ func evaluateIfReadyLocked(s *session) error {
 	}
 
 	evaluator := bgv.NewEvaluator(s.Params, s.EVK, true)
-	ctDx, err := evaluator.SubNew(ctPx, ctQx)
-	if err != nil {
-		return err
-	}
-	ctDy, err := evaluator.SubNew(ctPy, ctQy)
-	if err != nil {
-		return err
-	}
-
-	ctDx2 := bgv.NewCiphertext(s.Params, 2, ctDx.Level())
-	if err := evaluator.Mul(ctDx, ctDx, ctDx2); err != nil {
-		return err
-	}
-	if err := evaluator.Relinearize(ctDx2, ctDx2); err != nil {
-		return err
-	}
-
-	ctDxDy := bgv.NewCiphertext(s.Params, 2, ctDx.Level())
-	if err := evaluator.Mul(ctDx, ctDy, ctDxDy); err != nil {
-		return err
-	}
-	if err := evaluator.Relinearize(ctDxDy, ctDxDy); err != nil {
-		return err
-	}
-
-	ctDy2 := bgv.NewCiphertext(s.Params, 2, ctDy.Level())
-	if err := evaluator.Mul(ctDy, ctDy, ctDy2); err != nil {
-		return err
-	}
-	if err := evaluator.Relinearize(ctDy2, ctDy2); err != nil {
-		return err
-	}
-
-	ctTemp, err := evaluator.SubNew(ctDx2, ctDxDy)
-	if err != nil {
-		return err
-	}
-	ctDist2, err := evaluator.AddNew(ctTemp, ctDy2)
-	if err != nil {
-		return err
-	}
-
-	radiusSquared := p.Radius * p.Radius
-	radiusVector := make([]int64, s.Params.MaxSlots())
-	radiusVector[0] = radiusSquared
-	ctDelta, err := evaluator.SubNew(ctDist2, radiusVector)
+	ctDelta, err := demo.ProximityDelta(s.Params, evaluator, ctPx, ctPy, ctQx, ctQy, s.Radius)
 	if err != nil {
 		return err
 	}
 
 	out, err := demo.MarshalB64(ctDelta)
 	if err != nil {
+		return err
+	}
+	if err := recordEvaluation(s, time.Now()); err != nil {
 		return err
 	}
 	s.CTDelta = out
@@ -573,11 +531,14 @@ type createCaseRequest struct {
 
 type resultRequest struct {
 	Classification string `json:"classification"`
+	CRSSeed        string `json:"crsSeed"`
 }
 
 func roleMatchesSession(s *session, u userRecord, requested string) bool {
 	return requested != "" && requested == sessionRoleForUser(s, u)
 }
+
+var targetSessionMu sync.Mutex
 
 func ensureTargetSession(t targetRecord) (targetRecord, error) {
 	if t.Status == "complete" {
@@ -588,7 +549,23 @@ func ensureTargetSession(t targetRecord) (targetRecord, error) {
 			return t, nil
 		}
 	}
-	s, err := createSession(t.PoliceID, t.SuspectID, t.ID)
+	targetSessionMu.Lock()
+	defer targetSessionMu.Unlock()
+	t, err := getTarget(t.ID)
+	if err != nil || t.Status == "complete" {
+		return t, err
+	}
+	if _, ok := getSession(t.CryptoSession); ok {
+		return t, nil
+	}
+	used, err := evaluationUsed(t.ID)
+	if err != nil || used {
+		return t, err
+	}
+	if t.Radius < 0 || t.Radius > demo.MaxProximityInput {
+		return t, nil
+	}
+	s, err := createSession(t.PoliceID, t.SuspectID, t.ID, t.CaseID, t.Radius)
 	if err != nil {
 		return t, err
 	}
@@ -631,6 +608,9 @@ func handleCreateCase(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
+	if !allowRequest(w, "case:"+strconv.FormatInt(u.ID, 10), 10, time.Minute) {
+		return
+	}
 	var req createCaseRequest
 	if err := decodeJSON(w, r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err)
@@ -642,6 +622,39 @@ func handleCreateCase(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusCreated, map[string]any{"ok": true, "caseId": id})
+}
+
+func handleDeleteCase(w http.ResponseWriter, r *http.Request) {
+	u, ok := requireRole(w, r, "police")
+	if !ok {
+		return
+	}
+	id, err := strconv.ParseInt(r.PathValue("caseID"), 10, 64)
+	if err != nil || id <= 0 {
+		writeError(w, http.StatusBadRequest, errors.New("identificador de caso inválido"))
+		return
+	}
+
+	targetSessionMu.Lock()
+	defer targetSessionMu.Unlock()
+	deleted, err := deleteCase(r.Context(), id, u.ID)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, errors.New("no se pudo borrar el caso"))
+		return
+	}
+	if !deleted {
+		writeError(w, http.StatusNotFound, errors.New("caso no encontrado"))
+		return
+	}
+	sessions.mu.Lock()
+	for sessionID, s := range sessions.sessions {
+		if s.CaseID == id {
+			delete(sessions.sessions, sessionID)
+		}
+	}
+	sessions.mu.Unlock()
+
+	writeJSON(w, http.StatusOK, messageResponse{OK: true, Message: "caso borrado"})
 }
 
 func handleSuspectAssignments(w http.ResponseWriter, r *http.Request) {
@@ -660,6 +673,7 @@ func handleSuspectAssignments(w http.ResponseWriter, r *http.Request) {
 			writeError(w, http.StatusInternalServerError, err)
 			return
 		}
+		items[i].Classification = nil
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"ok": true, "assignments": items})
 }
@@ -698,9 +712,16 @@ func handleTargetContext(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, err)
 		return
 	}
+	if t.Status != "complete" {
+		if _, active := getSession(t.CryptoSession); !active {
+			writeError(w, http.StatusConflict, errors.New("no se puede reanudar esta asignación; solicita una nueva evaluación con un radio válido"))
+			return
+		}
+	}
 	otherName := t.SuspectName
 	if role == "suspect" {
 		otherName = t.PoliceName
+		t.Classification = nil
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
 		"ok":             true,
@@ -730,7 +751,33 @@ func handleTargetResult(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, err)
 		return
 	}
-	if err := saveTargetResult(id, req.Classification); err != nil {
+	if t.Classification != nil && *t.Classification == req.Classification {
+		writeJSON(w, http.StatusOK, messageResponse{OK: true, Message: "resultado guardado"})
+		return
+	}
+	s, ok := getSession(t.CryptoSession)
+	if !ok {
+		writeError(w, http.StatusConflict, errors.New("no hay una evaluación activa para esta asignación"))
+		return
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if req.CRSSeed != s.CRSSeed || s.CTDelta == "" || s.E2SAgg == "" ||
+		s.GC["garbled"] == "" || s.GC["gcLabels"] == "" || s.GC["otA"] == "" ||
+		s.GC["otR"] == "" || s.GC["otE"] == "" {
+		writeError(w, http.StatusConflict, errors.New("el protocolo todavía no está listo para guardar un resultado"))
+		return
+	}
+	current, err := getTarget(id)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, err)
+		return
+	}
+	if current.Classification != nil && *current.Classification != req.Classification {
+		writeError(w, http.StatusConflict, errors.New("esta asignación ya tiene un resultado distinto"))
+		return
+	}
+	if err := saveTargetResult(id, s.ID, req.Classification); err != nil {
 		writeError(w, http.StatusBadRequest, err)
 		return
 	}
@@ -749,6 +796,9 @@ func resetSessionLocked(s *session) error {
 	ckg := multiparty.NewPublicKeyGenProtocol(s.Params)
 	rkg := multiparty.NewRelinearizationKeyGenProtocol(s.Params)
 
+	if err := updateTargetCryptoSession(s.TargetID, s.ID); err != nil {
+		return err
+	}
 	s.CreatedAt = time.Now()
 	s.CRSSeed = seed
 	s.CRPCKG = ckg.SampleCRP(crs)
@@ -765,16 +815,23 @@ func resetSessionLocked(s *session) error {
 	s.E2SAgg = ""
 	s.GC = map[string]string{}
 
-	return updateTargetCryptoSession(s.TargetID, s.ID)
+	return nil
 }
 
 func handleResetSession(w http.ResponseWriter, r *http.Request) {
-	s, _, _ := requireSession(w, r)
+	s, u, _ := requireSession(w, r)
 	if s == nil {
+		return
+	}
+	if !allowRequest(w, "reset:"+strconv.FormatInt(u.ID, 10), 5, time.Minute) {
 		return
 	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	if s.CTDelta != "" {
+		writeError(w, http.StatusConflict, errors.New("esta asignación ya se evaluó; solicita una nueva evaluación"))
+		return
+	}
 	if err := resetSessionLocked(s); err != nil {
 		writeError(w, http.StatusInternalServerError, err)
 		return
@@ -885,13 +942,6 @@ func handleInput(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, errors.New("rol o ciphertexts inválidos"))
 		return
 	}
-	if req.Role == "police" && req.Radius < 0 {
-		writeError(w, http.StatusBadRequest, errors.New("radio negativo"))
-		return
-	}
-	if req.Role == "suspect" {
-		req.Radius = 0
-	}
 	if _, err := parseCiphertext(s.Params, req.CTX); err != nil {
 		writeError(w, http.StatusBadRequest, fmt.Errorf("ctX inválido: %w", err))
 		return
@@ -903,13 +953,37 @@ func handleInput(w http.ResponseWriter, r *http.Request) {
 
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	if s.Inputs[req.Role].CTX != "" {
+	if req.CRSSeed != s.CRSSeed || s.EVK == nil {
+		writeError(w, http.StatusConflict, errors.New("la sesión criptográfica no está lista para recibir coordenadas"))
+		return
+	}
+	if req.Role == "suspect" && s.Inputs["police"].CTX == "" {
+		writeError(w, http.StatusConflict, errors.New("espera a que Policía fije el punto de referencia"))
+		return
+	}
+	input := encryptedInput{CTX: req.CTX, CTY: req.CTY}
+	if old := s.Inputs[req.Role]; old.CTX != "" {
+		if old == input {
+			writeJSON(w, http.StatusOK, messageResponse{OK: true, Message: "ciphertexts recibidos"})
+			return
+		}
 		writeError(w, http.StatusConflict, errors.New("ese rol ya envió sus coordenadas cifradas"))
 		return
 	}
-	s.Inputs[req.Role] = encryptedInput{CTX: req.CTX, CTY: req.CTY, Radius: req.Radius}
+	s.Inputs[req.Role] = input
 	if err := evaluateIfReadyLocked(s); err != nil {
-		writeError(w, http.StatusBadRequest, err)
+		delete(s.Inputs, req.Role)
+		var limit *evaluationLimit
+		switch {
+		case errors.As(err, &limit):
+			writeRateLimit(w, limit.retryAt, limit.Error())
+		case errors.Is(err, errEvaluationTargetMissing):
+			writeError(w, http.StatusNotFound, err)
+		case errors.Is(err, errAssignmentUsed):
+			writeError(w, http.StatusConflict, err)
+		default:
+			writeError(w, http.StatusBadRequest, err)
+		}
 		return
 	}
 	markTargetProcessing(s.TargetID)
@@ -1071,7 +1145,7 @@ func main() {
 
 	// Auth
 	mux.HandleFunc("POST /api/auth/register", handleRegister)
-	mux.HandleFunc("POST /api/auth/login", handleLogin)
+	mux.HandleFunc("POST /api/auth/login", handleLimitedLogin)
 	mux.HandleFunc("POST /api/auth/logout", handleLogout)
 	mux.HandleFunc("GET /api/me", handleMe)
 
@@ -1079,6 +1153,7 @@ func main() {
 	mux.HandleFunc("GET /api/police/suspects", handlePoliceSuspects)
 	mux.HandleFunc("GET /api/police/cases", handlePoliceCases)
 	mux.HandleFunc("POST /api/police/cases", handleCreateCase)
+	mux.HandleFunc("DELETE /api/police/cases/{caseID}", handleDeleteCase)
 	mux.HandleFunc("GET /api/suspect/assignments", handleSuspectAssignments)
 	mux.HandleFunc("GET /api/targets/{targetID}/context", handleTargetContext)
 	mux.HandleFunc("POST /api/targets/{targetID}/result", handleTargetResult)
@@ -1122,7 +1197,13 @@ func securityHeaders(next http.Handler) http.Handler {
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		w.Header().Set("Referrer-Policy", "same-origin")
 		w.Header().Set("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
-		w.Header().Set("X-Frame-Options", "DENY")
+		switch r.URL.Path {
+		case "/demo-login.html", "/police-dashboard.html", "/suspect-dashboard.html", "/crypto.html":
+			w.Header().Set("X-Frame-Options", "SAMEORIGIN")
+			w.Header().Set("Content-Security-Policy", "frame-ancestors 'self'")
+		default:
+			w.Header().Set("X-Frame-Options", "DENY")
+		}
 		next.ServeHTTP(w, r)
 	})
 }

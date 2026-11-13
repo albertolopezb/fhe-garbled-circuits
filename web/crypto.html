@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Protocolo criptográfico · Private Proximity</title>
-  <link rel="stylesheet" href="/style.css" />
+  <link rel="stylesheet" href="/style.css?v=tablero" />
   <script src="/wasm_exec.js"></script>
 </head>
 <body>
@@ -31,8 +31,8 @@
         <section class="card">
           <h2 id="inputTitle">2. Datos privados</h2>
           <div class="grid">
-            <label id="xLabel">X <input id="x" type="number" value="10" /></label>
-            <label id="yLabel">Y <input id="y" type="number" value="20" /></label>
+            <label id="xLabel">X <input id="x" type="number" min="0" max="100" step="1" value="10" /></label>
+            <label id="yLabel">Y <input id="y" type="number" min="0" max="100" step="1" value="20" /></label>
           </div>
           <div class="notice" style="margin-top:16px">Estos valores se usan localmente para crear ciphertexts. La API no recibe las coordenadas en claro.</div>
           <div class="actions"><button id="sendBtn" disabled>Cifrar localmente y enviar ciphertexts</button></div>

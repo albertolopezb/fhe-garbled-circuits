@@ -12,8 +12,8 @@ Esta versión está pensada para demostrar el protocolo con **Policía + tres us
 
 - **Go API**: autenticación, SQLite, coordinación de sesiones multiparty, evaluación homomórfica y buzón de mensajes del circuito garbleado (no ve nada en claro).
 - **SQLite**: usuarios, sesiones de autenticación, casos, participantes y clasificación final.
-- **party.wasm**: criptografía local en cada pestaña (Lattigo + circuitos garbleados).
-- **sessionStorage**: cada pestaña conserva su propio Bearer token, por lo que Policía, Carlos, Fer y Ximena pueden coexistir sin sustituir sus identidades.
+- **party.wasm**: criptografía local en cada vista (Lattigo + circuitos garbleados).
+- **sessionStorage**: cada cuenta demo usa su propio Bearer token, por lo que Policía, Carlos, Fer y Ximena pueden coexistir sin sustituir sus identidades.
 - **IndexedDB local**: conserva el estado criptográfico serializado por `cryptoSession` para que navegar al dashboard o recargar no genere una nueva secret key.
 - **Secret keys**: nunca se envían a la API ni se guardan en SQLite. En esta demo sí se serializan **solo localmente** dentro de `IndexedDB` del navegador para poder regresar al dashboard y continuar la misma sesión.
 
@@ -66,43 +66,19 @@ http://localhost:8080
 
 ## Demo Control Center
 
-La página principal permite abrir individualmente:
-
-```text
-Policía
-Carlos
-Fer
-Ximena
-```
-
-o usar **Abrir todas las vistas**.
-
-Cada pestaña pasa por `/demo-login.html?account=...`, elimina cualquier token heredado, inicia una sesión demo y guarda el token únicamente en su `sessionStorage`.
+La página principal muestra **Policía a la izquierda** y el panel de **Sospechosos a la derecha**. Usa los botones Carlos, Fer y Ximena para cambiar de cuenta en el panel derecho. Cada cuenta conserva su pantalla al cambiar de persona.
 
 ### Flujo recomendado
 
-1. Abrir las cuatro vistas.
-2. En Policía, crear un caso y seleccionar Carlos, Fer y Ximena.
-3. En cada usuario, abrir su solicitud.
-4. En Policía y en el usuario correspondiente, generar su secret key local. La primera parte quedará en “esperando a la otra parte”; eso es normal porque la CPK/RLK necesita las dos shares.
-5. Cuando ambas partes estén listas, el botón de cifrado se habilita automáticamente.
-6. Ingresar la ubicación y cifrarla localmente.
-7. Puedes volver al dashboard y regresar al protocolo: el estado local se restaura desde `IndexedDB` y **no genera una secret key nueva**.
-8. Volver a Policía; el dashboard se actualiza automáticamente.
+1. Crea un caso en el panel de Policía y selecciona a los participantes.
+2. Abre el protocolo de una persona en Policía y selecciona a esa persona a la derecha para abrir su solicitud.
+3. Genera la secret key en cada panel. El primero espera a la otra parte para completar CPK/RLK.
+4. Policía cifra y envía el punto de referencia. La otra parte ingresa su ubicación y pulsa **Autorizar y enviar ubicación cifrada**.
+5. Mantén ambos protocolos visibles hasta ver la clasificación en Policía. Luego vuelve al panel de casos y repite con la siguiente persona.
 
-Si el navegador bloquea múltiples pop-ups, permite pop-ups para `localhost:8080` o abre las vistas con los botones individuales.
+### Autenticación
 
-## Autenticación por pestaña
-
-La API acepta:
-
-```http
-Authorization: Bearer <token>
-```
-
-`shared.js` obtiene el token desde `sessionStorage`. Esto evita el problema de una cookie global que haría que el login de Carlos reemplazara el login de Policía en todas las pestañas.
-
-El backend conserva soporte de cookie únicamente como fallback de compatibilidad, pero las vistas nuevas usan Bearer token.
+Cada cuenta demo usa un token Bearer con una clave propia en `sessionStorage`. Los paneles comparten el origen y el almacenamiento del navegador, por lo que el modo demo simula roles en un solo equipo. Para ensayar con almacenamiento separado, usa **Modo normal** en perfiles de navegador distintos.
 
 ## Modo normal
 
@@ -156,11 +132,18 @@ Mensajes nuevos de la API: `POST/GET /api/sessions/{id}/e2s` y `POST/GET /api/se
 
 Pruebas: `go test ./internal/gc` (circuito, garbling, OT y la tubería completa BGV → E2S → circuito).
 
-Límites conocidos: seguridad *semi-honest*; el signo de `Δ` solo es correcto si `|Δ| < 32768` (módulo del texto plano 65537); y varias consultas con puntos de escena distintos siguen filtrando información (no se resuelve criptográficamente).
+El cálculo usa `Δ = dx² + dy² − R²`. Ambos clientes validan coordenadas enteras de 0 a 100 antes de cifrarlas y la API usa el radio de 0 a 100 guardado en el caso. Así, con clientes semi-honestos, `Δ` queda entre −10000 y 20000 dentro del rango del módulo 65537. La API no verifica el rango de las coordenadas contenidas en un ciphertext.
 
-## Siguiente etapa
+## Límites de la demo
 
-La siguiente capa de UI puede dibujar un aro representando el radio del caso y colocar cada icono de usuario **de forma ilustrativa** dentro o fuera del aro según la clasificación, sin mostrar su posición real.
+- Una evaluación por asignación y hasta tres en una ventana móvil de una hora por pareja Policía–Usuario, incluso entre casos distintos. SQLite registra el consumo antes de publicar `Enc(Δ)`. Recargar y retransmitir el mismo mensaje no consume otra evaluación. Cada consulta nueva requiere el envío de la ubicación cifrada del usuario.
+- Se puede reiniciar la sesión antes de evaluar. Si se pierde el estado criptográfico después de consumir la evaluación, se necesita una nueva asignación y aplica la misma cuota.
+- La API limita el login a 20 intentos por minuto por IP, la creación a 10 casos por minuto por cuenta y el reinicio a 5 intentos por minuto por cuenta. Las cuotas temporales responden con `429` y `Retry-After`.
+- La clasificación se guarda después del intercambio del circuito. El servidor la conserva y el usuario consultado solo recibe el estado. El protocolo supone participantes semi-honestos y las clasificaciones repetidas todavía pueden aportar información sobre la ubicación.
+
+## Mapa de la demo
+
+El mapa del panel de Policía ubica los iconos de forma ilustrativa según la clasificación. Para probar los roles con almacenamiento separado, abre Policía y Usuario en perfiles de navegador distintos.
 
 
 ## Recuperación de sesión criptográfica
