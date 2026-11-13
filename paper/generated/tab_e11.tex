@@ -1,0 +1,15 @@
+\begin{tabular}{llrrrrr}
+\hline
+Test & Input & Samples & Bins & $\chi^2$ & df & $p$ \\
+\hline
+uniform all slots & inside & 1,638,400 & 65,537 & 65,697 & 65536 & 0.328 \\
+uniform slot0 & inside & 1,000 & 16 & 8.2240 & 15 & 0.915 \\
+uniform all slots & boundary & 1,638,400 & 65,537 & 64,621 & 65536 & 0.994 \\
+uniform slot0 & boundary & 1,000 & 16 & 17.504 & 15 & 0.289 \\
+uniform all slots & outside & 1,638,400 & 65,537 & 65,230 & 65536 & 0.801 \\
+uniform slot0 & outside & 1,000 & 16 & 17.696 & 15 & 0.279 \\
+same distribution slot0 & inside vs outside & 2,000 & 16 & 11.707 & 15 & 0.702 \\
+same distribution slot0 & inside vs boundary & 2,000 & 16 & 13.967 & 15 & 0.528 \\
+same distribution slot0 & boundary vs outside & 2,000 & 16 & 18.877 & 15 & 0.219 \\
+\hline
+\end{tabular}

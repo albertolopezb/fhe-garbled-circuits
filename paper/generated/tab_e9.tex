@@ -1,0 +1,18 @@
+\begin{tabular}{lrrrr}
+\hline
+Artifact & Bytes & MiB & gzip -9 & brotli 11 \\
+\hline
+party: default & 11,802,642 & 11.26 & 2.75 & 1.98 \\
+party: strip & 11,488,036 & 10.96 & 2.69 & 1.94 \\
+party: trimpath & 11,757,642 & 11.21 & 2.75 & 1.98 \\
+party: strip\_trimpath & 11,443,013 & 10.91 & 2.69 & 1.94 \\
+party: default\_wasmopt\_Oz & 10,336,136 & 9.86 & 2.65 & 1.95 \\
+party: strip\_wasmopt\_Oz & 10,336,159 & 9.86 & 2.65 & 1.95 \\
+party: tinygo & \multicolumn{4}{l}{not run} \\
+ablate: empty\_runtime & 1,964,129 & 1.87 & 0.56 & 0.43 \\
+ablate: gc\_ot & 3,058,834 & 2.92 & 0.83 & 0.63 \\
+ablate: bgv & 11,974,817 & 11.42 & 2.76 & 2.00 \\
+ablate: mpbgv & 11,957,145 & 11.40 & 2.76 & 1.99 \\
+party: committed\_in\_repo & 12,915,336 & 12.32 & 3.00 & 2.16 \\
+\hline
+\end{tabular}

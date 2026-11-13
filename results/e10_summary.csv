@@ -1,0 +1,3 @@
+model,points,queries_min,queries_q1,queries_median,queries_q3,queries_max,median_hours_1_account,median_hours_2_accounts,median_hours_5_accounts,bound_note
+exact_delta,300,1,2.0,2.0,2.0,2,0,0,0,log2(10201) = 13.32 bits; log3(10201) = 8.40 three-way answers
+class_greedy,300,4,12.0,13.0,13.0,14,4,2,0,log2(10201) = 13.32 bits; log3(10201) = 8.40 three-way answers

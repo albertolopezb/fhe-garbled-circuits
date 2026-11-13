@@ -1,0 +1,17 @@
+\begin{tabular}{lcccrll}
+\hline
+Case & $P$ & $U$ & $R$ & $\Delta$ & Expected & Observed \\
+\hline
+inside & (10,20) & (11,22) & 5 & $-20$ & inside & inside \\
+boundary & (10,20) & (13,24) & 5 & $0$ & boundary & boundary \\
+outside & (10,20) & (14,24) & 5 & $7$ & outside & outside \\
+delta\_min & (0,0) & (0,0) & 100 & $-10000$ & inside & inside \\
+delta\_max & (100,100) & (0,0) & 0 & $20000$ & outside & outside \\
+identical\_r0 & (5,5) & (5,5) & 0 & $0$ & boundary & boundary \\
+identical\_r1 & (50,50) & (50,50) & 1 & $-1$ & inside & inside \\
+corners\_r100 & (0,0) & (100,100) & 100 & $10000$ & outside & outside \\
+corners\_anti\_r0 & (0,100) & (100,0) & 0 & $20000$ & outside & outside \\
+adjacent\_r1 & (0,0) & (0,1) & 1 & $0$ & boundary & boundary \\
+adjacent\_r0 & (0,0) & (0,1) & 0 & $1$ & outside & outside \\
+\hline
+\end{tabular}

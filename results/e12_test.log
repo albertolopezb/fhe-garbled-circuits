@@ -1,0 +1,15 @@
+=== RUN   TestGarbleWithTruthHonest
+--- PASS: TestGarbleWithTruthHonest (0.03s)
+=== RUN   TestCheatingGarblerRevealsDelta
+    cheating_garbler_test.go:173: 300 of 300 trials: 17 forged garblings each recovered delta mod t exactly; gc.Evaluate reported no error
+--- PASS: TestCheatingGarblerRevealsDelta (0.69s)
+=== RUN   TestCheatingGarblerForcesOutside
+--- PASS: TestCheatingGarblerForcesOutside (0.05s)
+=== RUN   TestCompareCircuitMatchesApplication
+--- PASS: TestCompareCircuitMatchesApplication (0.05s)
+=== RUN   TestCompareCircuitOtherModuli
+--- PASS: TestCompareCircuitOtherModuli (0.11s)
+=== RUN   TestMaxCoordinate
+--- PASS: TestMaxCoordinate (0.00s)
+PASS
+ok  	lattigo-auth-ui-demo/bench	2.250s

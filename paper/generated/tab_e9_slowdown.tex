@@ -1,0 +1,14 @@
+\begin{tabular}{lrrr}
+\hline
+Phase & Native (ms) & WASM (ms) & Ratio \\
+\hline
+Collective keygen (CPK+RLK) & 79.3 & 269 & 3.4$\times$ \\
+Encrypt (4 ciphertexts) & 34.9 & 93.9 & 2.7$\times$ \\
+Server evaluation of $\Delta$ & 60.6 & 163 & 2.7$\times$ \\
+Encryption-to-shares & 7.86 & 20.7 & 2.6$\times$ \\
+Garble & 0.0675 & 0.489 & 7.2$\times$ \\
+Oblivious transfer (17) & 2.18 & 14.2 & 6.5$\times$ \\
+Circuit evaluation & 0.0125 & 0.0783 & 6.3$\times$ \\
+One evaluation (no keygen) & 164 & 556 & 3.4$\times$ \\
+\hline
+\end{tabular}

@@ -1,0 +1,16 @@
+experiment,phase,message,sender,receiver,count,binary_bytes_each,base64_bytes_each,base64_bytes_total,note
+e7,CPK,CKG share,each client,API,1,1048656,1398208,1398208,posted together with RKG round 1
+e7,RLK r1,RKG round-1 share,each client,API,1,6292000,8389336,8389336,
+e7,CPK,collective public key,API,each client,1,2097320,2796428,2796428,setup artifacts
+e7,RLK r1,aggregated round-1 share,API,each client,1,6292000,8389336,8389336,setup artifacts
+e7,RLK r2,RKG round-2 share,each client,API,1,3146032,4194712,4194712,
+e7,Ciphertexts,encrypted coordinate,each client,API,2,1573262,2097684,4195368,x and y
+e7,E2S,Enc(delta),API,each client,1,1573262,2097684,2097684,
+e7,E2S,public E2S share,each client,API,1,786488,1048652,1048652,
+e7,E2S,aggregated E2S share,API,each client,1,786488,1048652,1048652,
+e7,Garbled circuit,garbled tables + decode bits,User,API,1,5322,7096,7096,relayed to Police
+e7,Garbled circuit,garbler input labels,User,API,1,272,364,364,relayed to Police
+e7,OT otA,sender message,User,API,1,32,44,44,relayed to Police
+e7,OT otR,receiver message,Police,API,1,544,728,728,relayed to User
+e7,OT otE,encrypted label pairs,User,API,1,544,728,728,relayed to Police
+e7,Result,classification string,Police,API,1,24,32,32,upper bound on the text length

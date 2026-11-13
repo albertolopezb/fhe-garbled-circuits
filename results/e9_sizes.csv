@@ -1,0 +1,13 @@
+experiment,group,variant,status,bytes,gzip9_bytes,brotli11_bytes,build_s,go_version,commit,note
+e9,party,default,ok,11802642,2878845,2077980,1,go1.26.0,2fd5a89818012bd9350f2de265ce82443dba3658,go build with no flags (what build.sh does)
+e9,party,strip,ok,11488036,2817750,2036208,1,go1.26.0,2fd5a89818012bd9350f2de265ce82443dba3658,-ldflags=-s -w
+e9,party,trimpath,ok,11757642,2878586,2079067,1,go1.26.0,2fd5a89818012bd9350f2de265ce82443dba3658,-trimpath
+e9,party,strip_trimpath,ok,11443013,2817393,2039121,1,go1.26.0,2fd5a89818012bd9350f2de265ce82443dba3658,-ldflags=-s -w -trimpath
+e9,party,default_wasmopt_Oz,ok,10336136,2780325,2047391,59,go1.26.0,2fd5a89818012bd9350f2de265ce82443dba3658,wasm-opt -Oz --all-features on party-default (with only --enable-bulk-memory the validator rejects Go output: i64.trunc_sat)
+e9,party,strip_wasmopt_Oz,ok,10336159,2781253,2048080,57,go1.26.0,2fd5a89818012bd9350f2de265ce82443dba3658,wasm-opt -Oz --all-features on party-strip (with only --enable-bulk-memory the validator rejects Go output: i64.trunc_sat)
+e9,party,tinygo,not_run,,,,0,go1.26.0,2fd5a89818012bd9350f2de265ce82443dba3658,tinygo is not installed on this machine
+e9,ablate,empty_runtime,ok,1964129,582822,446725,1,go1.26.0,2fd5a89818012bd9350f2de265ce82443dba3658,Go runtime + syscall/js only
+e9,ablate,gc_ot,ok,3058834,871784,659942,1,go1.26.0,2fd5a89818012bd9350f2de265ce82443dba3658,runtime + garbled circuit + OT (edwards25519)
+e9,ablate,bgv,ok,11974817,2896830,2095561,1,go1.26.0,2fd5a89818012bd9350f2de265ce82443dba3658,runtime + single-key BGV
+e9,ablate,mpbgv,ok,11957145,2898443,2087493,1,go1.26.0,2fd5a89818012bd9350f2de265ce82443dba3658,runtime + BGV + multiparty protocols
+e9,party,committed_in_repo,ok,12915336,3148863,2262962,0,go1.26.0,2fd5a89818012bd9350f2de265ce82443dba3658,web/party.wasm at HEAD; built on a different machine and toolchain

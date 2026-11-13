@@ -1,0 +1,21 @@
+\begin{tabular}{lllrrr}
+\hline
+Phase & Message & Direction & \# & Each & Total \\
+\hline
+CPK & CKG share & each client $\rightarrow$ API & 1 & 1,365 & 1,365 \\
+RLK r1 & RKG round-1 share & each client $\rightarrow$ API & 1 & 8,193 & 8,193 \\
+CPK & collective public key & API $\rightarrow$ each client & 1 & 2,731 & 2,731 \\
+RLK r1 & aggregated round-1 share & API $\rightarrow$ each client & 1 & 8,193 & 8,193 \\
+RLK r2 & RKG round-2 share & each client $\rightarrow$ API & 1 & 4,096 & 4,096 \\
+Ciphertexts & encrypted coordinate & each client $\rightarrow$ API & 2 & 2,049 & 4,097 \\
+E2S & Enc(delta) & API $\rightarrow$ each client & 1 & 2,049 & 2,049 \\
+E2S & public E2S share & each client $\rightarrow$ API & 1 & 1,024 & 1,024 \\
+E2S & aggregated E2S share & API $\rightarrow$ each client & 1 & 1,024 & 1,024 \\
+Garbled circuit & garbled tables + decode bits & User $\rightarrow$ API & 1 & 6.93 & 6.93 \\
+Garbled circuit & garbler input labels & User $\rightarrow$ API & 1 & 0.355 & 0.355 \\
+OT otA & sender message & User $\rightarrow$ API & 1 & 0.0430 & 0.0430 \\
+OT otR & receiver message & Police $\rightarrow$ API & 1 & 0.711 & 0.711 \\
+OT otE & encrypted label pairs & User $\rightarrow$ API & 1 & 0.711 & 0.711 \\
+Result & classification string & Police $\rightarrow$ API & 1 & 0.0312 & 0.0312 \\
+\hline
+\end{tabular}
