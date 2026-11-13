@@ -1,0 +1,10 @@
+\begin{tabular}{llc}
+\hline
+Scenario & Observed & As expected \\
+\hline
+User leaves before answering the OT & still pending after 15 s & yes \\
+User reopens the page & completes: inside & yes \\
+Police reload after key generation & completes: outside & yes \\
+Client script sends $x = 200$ & rejected inside the WASM client & yes \\
+\hline
+\end{tabular}

@@ -1,0 +1,29 @@
+\begin{tabular}{lrrrrrr}
+\hline
+Phase & P \# & P up & P down & U \# & U up & U down \\
+\hline
+CPK + RLK r1 shares & 1 & 9,558 & 0.338 & 1 & 9,558 & 0.338 \\
+CPK + RLK r1 aggregate & 1 & 0 & 10,924 & 1 & 0 & 10,924 \\
+RLK r2 share & 1 & 4,096 & 0.333 & 1 & 4,096 & 0.333 \\
+Ciphertexts & 1 & 4,097 & 0.382 & 1 & 4,097 & 0.382 \\
+Enc(delta) & 1 & 0 & 2,049 & 1 & 0 & 2,049 \\
+E2S share & 1 & 1,024 & 0.331 & 1 & 1,024 & 0.331 \\
+E2S aggregate & 1 & 0 & 1,024 & 1 & 0 & 1,024 \\
+send garbled & 0 & 0 & 0 & 1 & 6.96 & 0.329 \\
+send gcLabels & 0 & 0 & 0 & 1 & 0.383 & 0.329 \\
+send otA & 0 & 0 & 0 & 1 & 0.0703 & 0.329 \\
+fetch otA & 1 & 0 & 0.344 & 0 & 0 & 0 \\
+send otR & 1 & 0.737 & 0.329 & 0 & 0 & 0 \\
+fetch otR & 0 & 0 & 0 & 1 & 0 & 1.01 \\
+send otE & 0 & 0 & 0 & 1 & 0.738 & 0.329 \\
+fetch garbled & 1 & 0 & 7.25 & 0 & 0 & 0 \\
+fetch gcLabels & 1 & 0 & 0.657 & 0 & 0 & 0 \\
+fetch otE & 1 & 0 & 1.01 & 0 & 0 & 0 \\
+Result & 1 & 0.0908 & 0.365 & 0 & 0 & 0 \\
+polling (session state) & 35 & 0 & 26.4 & 35 & 0 & 26.4 \\
+other API & 2 & 0 & 1.03 & 2 & 0 & 1.03 \\
+static: party.wasm & 1 & 0 & 11,526 & 1 & 0 & 11,526 \\
+static: other & 13 & 0 & 43.9 & 13 & 0 & 66.8 \\
+\textbf{Total} & 64 & 18,777 & 25,606 & 63 & 18,784 & 25,622 \\
+\hline
+\end{tabular}

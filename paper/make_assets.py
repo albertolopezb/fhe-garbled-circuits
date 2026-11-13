@@ -523,6 +523,154 @@ if e7:
     num("eSevenClientUp", kib(up))
     num("eSevenGC", kib(sum(float(r["base64_bytes_total"]) for r in e7 if r["phase"].startswith(("Garbled", "OT")))))
 
+# ---------------------------------------------------------------- browser: E6 heat map
+e6b = load("e6_browser.csv")
+if e6b:
+    num("eSixBrRows", len(e6b))
+    num("eSixBrFailed", sum(1 for r in e6b if r["ok"] != "true"))
+    num("eSixBrReps", max(int(r["rep"]) for r in e6b) + 1)
+    num("eSixBrChrome", e6b[0]["chrome_version"].replace("HeadlessChrome/", "Chrome ").replace("Chrome/", "Chrome "))
+    cells = defaultdict(dict)
+    for r in e6b:
+        if r["cell_latency_s"]:
+            cells[(r["mode"], int(r["users"]), int(r["assignments_per_pair"]))][r["rep"]] = float(r["cell_latency_s"])
+    med = {k: miq(list(v.values())) for k, v in cells.items()}
+    names = {1: "One", 2: "Two", 3: "Three"}
+    for (mode, u, a), m in med.items():
+        num(f"eSixBr{mode.capitalize()}{names[u]}{names[a]}", f"{m[0]:.2f}")
+        num(f"eSixBr{mode.capitalize()}{names[u]}{names[a]}IQR", f"[{m[1]:.2f}, {m[2]:.2f}]")
+    one = [r for r in e6b if r["mode"] == "concurrent" and r["users"] == "1" and r["assignments_per_pair"] == "1" and r["t_total_s"]]
+    if one:
+        num("eSixBrSetup", cell(fl(one, "t_setup_s")))
+        num("eSixBrInputResult", cell(fl(one, "t_input_to_result_s")))
+        num("eSixBrTotal", cell(fl(one, "t_total_s")))
+    fig, ax = plt.subplots(figsize=(COL, 2.3))
+    grid = [[med.get(("concurrent", u, a), (float("nan"),))[0] for u in (1, 2, 3)] for a in (1, 2, 3)]
+    im = ax.imshow(grid, cmap="Greys", origin="lower", vmin=0, vmax=max(max(row) for row in grid) * 1.25, aspect="auto")
+    for i, a in enumerate((1, 2, 3)):
+        for j, u in enumerate((1, 2, 3)):
+            v = grid[i][j]
+            ax.text(j, i, f"{v:.1f} s", ha="center", va="center", fontsize=8, color="white" if v > im.get_clim()[1] * 0.55 else "black")
+    ax.set_xticks([0, 1, 2]); ax.set_xticklabels(["1", "2", "3"])
+    ax.set_yticks([0, 1, 2]); ax.set_yticklabels(["1", "2", "3"])
+    ax.set_xlabel("users"); ax.set_ylabel("assignments per pair"); ax.grid(False)
+    fig.colorbar(im, ax=ax, label="latency (s)")
+    fig.savefig(os.path.join(OUT, "fig_e6_heat.pdf"))
+    plt.close(fig)
+
+# ---------------------------------------------------------------- browser: E7 traffic
+e7t = load("e7_traffic.csv")
+if e7t:
+    agg = defaultdict(lambda: defaultdict(lambda: [0, 0.0, 0.0]))  # (role, phase) -> rep -> [n, up, down]
+    for r in e7t:
+        a = agg[(r["role"], r["phase"])][r["rep"]]
+        a[0] += 1
+        a[1] += float(r["request_body_bytes"] or 0)
+        a[2] += float(r["response_wire_bytes"] or 0)
+    nreps = len({r["rep"] for r in e7t})
+    num("eSevenTrReps", nreps)
+
+    def medv(role, phase, idx):
+        vals = [v[idx] for v in agg.get((role, phase), {}).values()]
+        vals += [0] * (nreps - len(vals))
+        return statistics.median(vals) if vals else 0
+
+    order = ["CPK + RLK r1 shares", "CPK + RLK r1 aggregate", "RLK r2 share", "Ciphertexts", "Enc(delta)", "E2S share", "E2S aggregate",
+             "send garbled", "send gcLabels", "send otA", "fetch otA", "send otR", "fetch otR", "send otE", "fetch garbled", "fetch gcLabels", "fetch otE",
+             "Result", "polling (session state)", "other API", "static: party.wasm", "static: other"]
+    phases = [p for p in order if any(k[1] == p for k in agg)] + sorted({k[1] for k in agg} - set(order))
+    rows = []
+    tot = {"police": [0, 0, 0], "user": [0, 0, 0]}
+    for p in phases:
+        row = [p.replace("_", "\\_")]
+        for role in ("police", "user"):
+            n, up, down = medv(role, p, 0), medv(role, p, 1), medv(role, p, 2)
+            for i, v in enumerate((n, up, down)):
+                tot[role][i] += v
+            row += [f"{n:g}", kib(up) if up else "0", kib(down) if down else "0"]
+        rows.append(row)
+    rows.append(["\\textbf{Total}"] + [x for role in ("police", "user") for x in (f"{tot[role][0]:g}", kib(tot[role][1]), kib(tot[role][2]))])
+    table("tab_e7_traffic.tex", ["Phase", "P \\#", "P up", "P down", "U \\#", "U up", "U down"], rows, "lrrrrrr")
+    for role, tag in (("police", "Police"), ("user", "User")):
+        num(f"eSevenTr{tag}Poll", f"{medv(role, 'polling (session state)', 0):g}")
+        num(f"eSevenTr{tag}Requests", f"{tot[role][0]:g}")
+        num(f"eSevenTr{tag}Up", kib(tot[role][1]))
+        num(f"eSevenTr{tag}Down", kib(tot[role][2]))
+        num(f"eSevenTr{tag}Wasm", kib(medv(role, "static: party.wasm", 2)))
+
+# ---------------------------------------------------------------- browser: E8 per role
+e8 = load("e8_browser.csv")
+if e8:
+    by = defaultdict(dict)
+    for r in e8:
+        by[(r["role"], r["rep"])][r["phase"][0]] = r
+    num("eEightReps", len({r["rep"] for r in e8}))
+    rows = []
+    for role in ("police", "user", "api"):
+        reps8 = [v for (ro, _), v in by.items() if ro == role and all(k in v for k in "123")]
+        if not reps8:
+            continue
+
+        def g(phase, col):
+            return [float(v[phase][col]) for v in reps8 if v[phase][col] not in ("", None)]
+
+        def delta(a, b, col):
+            return [float(v[b][col]) - float(v[a][col]) for v in reps8 if v[a][col] not in ("", None) and v[b][col] not in ("", None)]
+
+        ws1, ws3 = miq(g("1", "working_set_bytes"))[0], miq(g("3", "working_set_bytes"))[0]
+        cpu_k, cpu_e = miq(delta("1", "2", "cpu_ms_cumulative"))[0], miq(delta("2", "3", "cpu_ms_cumulative"))[0]
+        wasm = miq(g("3", "wasm_memory_bytes"))[0] if g("3", "wasm_memory_bytes") else float("nan")
+        procs = miq(g("3", "processes"))[0]
+        rows.append([{"police": "Police browser", "user": "User browser", "api": "API process"}[role], f"{procs:g}", mib(ws1), mib(ws3),
+                     sig(cpu_k), sig(cpu_e), mib(wasm) if wasm == wasm and wasm > 0 else "--"])
+        tag = role.capitalize()
+        num(f"eEight{tag}WsEnd", mib(ws3))
+        num(f"eEight{tag}CpuKeygen", sig(cpu_k))
+        num(f"eEight{tag}CpuEval", sig(cpu_e))
+        if wasm == wasm and wasm > 0:
+            num(f"eEight{tag}Wasm", mib(wasm))
+    table("tab_e8.tex", ["Participant", "Proc.", "WS loaded", "WS end", "CPU keygen", "CPU eval.", "WASM mem."], rows, "lrrrrrr")
+
+lt = load("e9_longtasks.csv")
+if e8:
+    per = defaultdict(list)
+    for r in lt:
+        per[(r["role"], r["rep"])].append(float(r["duration_ms"]))
+    for role, tag in (("police", "Police"), ("user", "User")):
+        runs = [per.get((role, rep), []) for rep in sorted({r["rep"] for r in e8})]
+        num(f"eNineLt{tag}Count", f"{statistics.median([len(x) for x in runs]):g}")
+        num(f"eNineLt{tag}Max", sig(max([max(x) for x in runs if x], default=0)))
+        num(f"eNineLt{tag}Total", sig(statistics.median([sum(x) for x in runs])))
+
+# ---------------------------------------------------------------- browser: E9 load
+bl = load("e9_browser_load.csv")
+if bl:
+    rows = []
+    for series in ("cold", "warm"):
+        g = [r for r in bl if r["series"] == series]
+        if not g:
+            continue
+        rows.append([series, str(len(g)), kib(miq(fl(g, "wasm_transfer_bytes"))[0]), cell(fl(g, "fetch_ms")), cell(fl(g, "compile_instantiate_ms")), cell(fl(g, "ready_ms"))])
+        tag = series.capitalize()
+        num(f"eNineBr{tag}Ready", cell(fl(g, "ready_ms")))
+        num(f"eNineBr{tag}Fetch", cell(fl(g, "fetch_ms")))
+        num(f"eNineBr{tag}Transfer", kib(miq(fl(g, "wasm_transfer_bytes"))[0]))
+        num("eNineBrWasmMem", mib(miq(fl(g, "wasm_memory_bytes"))[0]))
+    table("tab_e9_load.tex", ["Cache", "Runs", "Transfer (KiB)", "Fetch (ms)", "Compile + inst. (ms)", "Ready (ms)"], rows, "lrrrrr")
+
+# ---------------------------------------------------------------- browser: E13
+e13 = load("e13_robustness.csv")
+if e13:
+    label = {"missing_ot_response": "User leaves before answering the OT", "user_reopens_page": "User reopens the page",
+             "police_reload_after_keygen": "Police reload after key generation", "out_of_range_input": "Client script sends $x = 200$"}
+    obs = {"pending after 15 s without the User": "still pending after 15 s", "DENTRO DEL RADIO": "completes: inside", "FUERA DEL RADIO": "completes: outside"}
+    rows = [[label.get(r["scenario"], r["scenario"].replace("_", " ")),
+             obs.get(r["observed"], "rejected inside the WASM client" if r["observed"].startswith("rejected") else r["observed"].replace("_", " ")),
+             "yes" if r["ok"] == "true" else "no"] for r in e13]
+    table("tab_e13.tex", ["Scenario", "Observed", "As expected"], rows, "llc")
+    num("eThirteenRuns", len(e13))
+    num("eThirteenOk", sum(1 for r in e13 if r["ok"] == "true"))
+
 # ---------------------------------------------------------------- numbers.tex
 ALL = ["hwModel", "hwCPU", "hwCores", "hwThreads", "hwRAM", "hwOS", "hwGo", "hwNode", "hwCommit", "hwDate", "hwPower", "hwAC", "hwDefender"]
 lines = ["% Generated by paper/make_assets.py from results/*.csv. Do not edit by hand.",

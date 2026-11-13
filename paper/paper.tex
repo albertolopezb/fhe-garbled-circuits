@@ -21,14 +21,15 @@
 
 \title{Private Proximity: Multiparty Homomorphic Encryption with Garbled Circuits}
 
-\author{\IEEEauthorblockN{Carlos Eduardo Arias Capetillo, Alberto L\'opez Barrag\'an, Fernanda Santill\'an Dant\'es}
+\author{\IEEEauthorblockN{Carlos Eduardo Arias Capetillo, Fernanda Santill\'an Dant\'es, Alberto L\'opez Barrag\'an}
 \IEEEauthorblockA{Instituto Tecnol\'ogico y de Estudios Superiores de Monterrey, Campus Monterrey\\
 Av. Eugenio Garza Sada 2501, Col. Tecnol\'ogico, C.P. 64700, Monterrey, Nuevo Le\'on, Mexico\\
-Advisor: Juan David Guarnizo Hernandez}}
+Advisor: Juan David Guarnizo Hernandez\\
+Expo Ingenier\'ias, 28th edition, November 2026}}
 \maketitle
 
 \begin{abstract}
-Private Proximity is a browser-based prototype in which a Police client and a User client decide whether the User's location is inside, outside, or exactly on the boundary of a public radius around a reference point, without either side revealing its coordinates. An earlier version decrypted the margin $\Delta = \text{dist}^2 - R^2$, which gave the Police the exact distance. The version evaluated here never decrypts $\Delta$: a two-party BGV computation produces $\mathrm{Enc}(\Delta)$, an encryption-to-shares step turns it into additive shares modulo $t = 65{,}537$, and a Yao garbled circuit with oblivious transfer outputs only the class. We measured the cryptographic pipeline natively on one laptop. All \num{eOneRuns} end-to-end runs of the correctness experiment matched a plaintext oracle. The class is correct for every $\Delta$ from \num{eTwoLastGoodNeg} to \num{eTwoLastGoodPos} and wrong immediately outside that range. With the deployed parameters ($N = 2^{14}$, $\log QP = 438$) only about \num{eThreeDelta} of the \num{eThreeQBits} ciphertext-modulus bits are consumed, and a parameter sweep found a correct set at $N = 2^{\num{eFourBestN}}$ with $\log QP = \num{eFourBestQP}$ that lowers one client's work by a factor of \num{eFourSpeedClient} and the server's by \num{eFourSpeedServer}. We also report two limits: the noise-flooding term of the share conversion is smaller than the ciphertext noise it is meant to hide, and a garbler that deviates from the protocol can recover $\Delta$ in 17 executions, so the semi-honest assumption is essential. Browser-level latency, HTTP traffic and robustness experiments were not run and are listed as open.
+Private Proximity is a browser-based prototype in which a Police client and a User client decide whether the User's location is inside, outside, or exactly on the boundary of a public radius around a reference point, without either side revealing its coordinates. An earlier version decrypted the margin $\Delta = \text{dist}^2 - R^2$, which gave the Police the exact distance. The version evaluated here never decrypts $\Delta$: a two-party BGV computation produces $\mathrm{Enc}(\Delta)$, an encryption-to-shares step turns it into additive shares modulo $t = 65{,}537$, and a Yao garbled circuit with oblivious transfer outputs only the class. We measured the cryptographic pipeline natively on one laptop. All \num{eOneRuns} end-to-end runs of the correctness experiment matched a plaintext oracle. The class is correct for every $\Delta$ from \num{eTwoLastGoodNeg} to \num{eTwoLastGoodPos} and wrong immediately outside that range. With the deployed parameters ($N = 2^{14}$, $\log QP = 438$) only about \num{eThreeDelta} of the \num{eThreeQBits} ciphertext-modulus bits are consumed, and a parameter sweep found a correct set at $N = 2^{\num{eFourBestN}}$ with $\log QP = \num{eFourBestQP}$ that lowers one client's work by a factor of \num{eFourSpeedClient} and the server's by \num{eFourSpeedServer}. We also report two limits: the noise-flooding term of the share conversion is smaller than the ciphertext noise it is meant to hide, and a garbler that deviates from the protocol can recover $\Delta$ in 17 executions, so the semi-honest assumption is essential. In headless Chrome with one isolated profile per role, one assignment completes in a median of \num{eSixBrConcurrentOneOne}~s and nine concurrent assignments among three users in \num{eSixBrConcurrentThreeThree}~s; the application's one-second polling, not computation, accounts for most of that time.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -36,21 +37,23 @@ secure multiparty computation, homomorphic encryption, garbled circuits, oblivio
 \end{IEEEkeywords}
 
 \section{Introduction}
-Location is among the most sensitive data a person produces, and proximity questions (``was this person near that place?'') are often answered by handing a full location history to whoever asks. Secure computation offers a narrower alternative: two parties compute an agreed function of their private inputs and learn only its output.
+Many services need a decision that depends on personal data, not the data itself. Location is a clear case: it is among the most sensitive data a person produces, and proximity questions (``was this person near that place?'') are often answered by handing a full location history to whoever asks. Secure computation offers a narrower alternative: a service provider operates on data that stays encrypted, and the interested party learns only the outcome of the agreed business logic.
 
-\textbf{Context.} Private Proximity simulates a police inquiry. The Police hold a reference point $P$ (a case scene) and a public radius $R$; a User holds a private location $U$. Both run a WebAssembly client in the browser, and a Go server coordinates the protocol and evaluates encrypted arithmetic.
+\textbf{Context.} Private Proximity simulates a police inquiry. The Police hold a reference point $P$ (a case scene) and a public radius $R$; a User holds a private location $U$. Both run a WebAssembly client in the browser, and a Go server coordinates the protocol and evaluates encrypted arithmetic. In the terms of our research question, the server is the service provider, the Police are the stakeholder, the User's location is the protected user data, and the business logic outcome is the proximity class.
 
 \textbf{Problem.} In the previous version of the prototype the Police decrypted $\Delta = \text{dist}^2 - R^2$. That value reveals the exact distance to the User, and a few queries with different reference points are enough to locate the User.
 
 \textbf{Justification.} The question posed by the scenario has three possible answers. Revealing only that answer discloses strictly less than the distance, and it lets us study what such a design costs in a browser deployment.
 
-\textbf{Objective.} Replace the plaintext decryption of $\Delta$ with a garbled circuit that reveals only the classification, and evaluate the result: correctness against a plaintext reference, the limits of the encoding, the cost per participant, and what the remaining leakage is.
+\textbf{General objective.} Develop and validate, by the end of the academic term, a functional web prototype that verifies user proximity on homomorphically encrypted locations, without revealing them to the server.
+
+\textbf{Specific objectives.} (1)~Implement collective key generation and the encrypted computation of the squared-distance margin $\Delta$. (2)~Replace the plaintext decryption of $\Delta$ with a conversion to shares and a garbled circuit that reveals only the proximity class. (3)~Validate the prototype: correctness against a plaintext reference, the limits of the encoding, the cost in time, memory and traffic per participant, and the leakage that remains.
 
 \textbf{Hypothesis.} For inputs inside the supported range and parties that follow the protocol, the encrypted workflow returns the same class as a plaintext computation, and the Police obtain no more than that class from one evaluation.
 
 The research question addressed in this work is:
 \begin{quote}
-\itshape \todo{RESEARCH QUESTION: the project's existing wording must be inserted here by the authors. It was not available when this draft was generated and has deliberately not been paraphrased.}
+\itshape Can we develop a system that enables a service provider or stakeholder to have business logic outcomes by operating user data that is protected by encryption means?
 \end{quote}
 
 \section{Background}
@@ -165,7 +168,7 @@ We simulated an attacker who controls the Police point and the radius and wants 
 The evaluator cannot check that a garbled AND table encodes AND. In a unit test that is not part of the application, a garbler that rewrites the 16 AND gates of the ``$\Delta = 0$'' chain makes the second output bit equal one chosen bit of $\Delta \bmod t$; 17 such garblings recovered $\Delta \bmod t$ exactly in 300 of 300 trials, and the evaluator reported no error. A second test forces the output ``outside'' for every input by altering the decode bits. With the roles of the prototype (the User garbles) this is an integrity failure: a dishonest User chooses the class the Police see. The first test shows that the function being computed is whatever the garbler decides, which is why the semi-honest assumption cannot be dropped without adding protection against malicious garblers.
 
 \subsection{Out-of-Range Inputs (E2)}
-The server cannot see whether an encrypted coordinate is in $[0, 100]$. Section~\ref{sec:e2} shows that an input that pushes $\Delta$ beyond $\pm 32{,}768$ flips the class, so a modified client can force a wrong result without being detected.
+The server cannot see whether an encrypted coordinate is in $[0, 100]$. Section~\ref{sec:e2} shows that an input that pushes $\Delta$ beyond $\pm 32{,}768$ flips the class, so a modified client can force a wrong result without being detected. The range check exists in the page script and again inside the WebAssembly module (Section~\ref{sec:eval}, E13), so the attacker has to replace the module, which is entirely under the client's control.
 
 \subsection{Human in the Loop}
 A query is created by an authenticated Police account, and nothing is computed until the User opens the request and presses the button that encrypts and submits the location; the User's interface states that the result goes only to the Police. Consent is therefore per assignment and explicit. What the User cannot verify is the Police point or the purpose of the query, and the User is not told the outcome. Who is entitled to open a case, and how that authorization is audited, is outside the prototype.
@@ -175,7 +178,9 @@ A query is created by an authenticated Police account, and nothing is computed u
 \subsection{Setup and Method}
 All measurements were taken on one laptop: \num{hwModel}, \num{hwCPU} (\num{hwCores} cores, \num{hwThreads} threads), \num{hwRAM}~GiB RAM, \num{hwOS}, \num{hwGo}, commit \texttt{\num{hwCommit}}, on \num{hwDate}. The experiments drive the application's own packages from a native Go harness; the HTTP server, SQLite and the browser are not in the loop unless stated. Each experiment writes one CSV row per run; tables report medians with the interquartile range. Three warm-up runs are discarded. Time is read from the Windows performance counter because Go's monotonic clock on Windows returned 0 for sub-millisecond phases. Memory figures are peak working set, the Windows counterpart of resident set size.
 
-\emph{Deviations from the planned protocol.} The Windows power plan was ``\num{hwPower}'' (Balanced) rather than best performance, and Windows Defender real-time protection was \num{hwDefender}. E1--E3 were started on battery; the machine entered standby during the first E2 run, which was kept as a raw file and repeated. Random inputs and the common reference string are seeded; Lattigo's key and encryption randomness cannot be seeded. Parameter sets were timed with \num{eFourReps} repetitions. The first passes of E4 and E5a overlapped with compilation jobs on the same machine and showed inflated times, so both were repeated on an idle machine; the first-pass files are kept in \texttt{results/raw/}. The first pass of E5b failed in the packed variant for dimensions that are not powers of two because of an error in the harness (the inner sum needs a power-of-two width); it was corrected and E5b was repeated.
+\emph{Browser runs.} The browser experiments use the real server and WebAssembly client on localhost with headless \num{eSixBrChrome}, one Chrome instance with its own profile directory per role (Police and each User), background-timer throttling disabled, and a fresh server process on a copy of the committed database for every repetition, so the evaluation quota is neither changed nor reached. The driver presses each button as soon as it becomes enabled and never advances the protocol itself; the application's one-second timer does. Every repetition is served from a new origin (a new port), so each browser downloads the WebAssembly module again; pages are loaded before the latency clock starts.
+
+\emph{Deviations from the planned protocol.} The Windows power plan was ``\num{hwPower}'' (Balanced) rather than best performance, and Windows Defender real-time protection was \num{hwDefender}. E1--E3 were started on battery; the machine entered standby during the first E2 run, which was kept as a raw file and repeated. Random inputs and the common reference string are seeded; Lattigo's key and encryption randomness cannot be seeded. Parameter sets were timed with \num{eFourReps} repetitions; the browser heat map uses \num{eSixBrReps} repetitions per cell and the per-role profile \num{eEightReps}, fewer than the 30 planned. The first passes of E4 and E5a overlapped with compilation jobs on the same machine and showed inflated times, so both were repeated on an idle machine; the first-pass files are kept in \texttt{results/raw/}. The first pass of E5b failed in the packed variant for dimensions that are not powers of two because of an error in the harness (the inner sum needs a power-of-two width); it was corrected and E5b was repeated.
 
 \subsection{Correctness (E1)}
 \num{eOneRuns} evaluations (\num{eOneFixed} named cases, Table~\ref{tab:e1}, and \num{eOneRandom} uniformly random inputs in $[0,100]$) were compared with the plaintext class: \num{eOneMismatch} mismatches and \num{eOneFailed} failed runs. The observed classes were \num{eOneInside} inside, \num{eOneBoundary} boundary and \num{eOneOutside} outside. The same check was made end to end in the browser: four scenarios with $P=(10,20)$ and $R=5$ were driven in headless \num{eOneBrowserChrome} against the real server and WebAssembly client, and \num{eOneBrowserOk} of \num{eOneBrowserRuns} showed the expected page (inside, boundary, outside, and the quota error on a fourth evaluation of the same pair within one hour; Appendix~A).
@@ -257,7 +262,9 @@ The fastest set that is both correct and within the table is $\log N = \num{eFou
 \end{table}
 
 \subsection{Scaling with the Number of Pairs (E6, native)}
-We ran $n$ independent Police--User pairs (key generation plus one evaluation each) in one process, sequentially and concurrently (Fig.~\ref{fig:e6}). The largest load tested was \num{eSixMaxPairs} concurrent pairs: throughput peaked at \num{eSixBestThroughput} pairs/s at $n = \num{eSixBestN}$, the peak working set reached \num{eSixMaxMem}~MiB, and \num{eSixCrashed} runs crashed. Throughput stops growing once all cores are busy, so the processor saturates first; memory grows by about \num{eSixMemPerPair}~MiB per simultaneous pair and stayed below the installed RAM. Extrapolating that slope, memory would be exhausted near \num{eSixRamLimit} simultaneous pairs; this point was not tested. One pair alone takes \num{eSixLatencyOne}~ms (key generation plus one evaluation, median [IQR]). This experiment excludes the HTTP server, SQLite and the browsers; the planned browser heat map (users $\times$ assignments) was not run.
+We ran $n$ independent Police--User pairs (key generation plus one evaluation each) in one process, sequentially and concurrently (Fig.~\ref{fig:e6}). The largest load tested was \num{eSixMaxPairs} concurrent pairs: throughput peaked at \num{eSixBestThroughput} pairs/s at $n = \num{eSixBestN}$, the peak working set reached \num{eSixMaxMem}~MiB, and \num{eSixCrashed} runs crashed. Throughput stops growing once all cores are busy, so the processor saturates first; memory grows by about \num{eSixMemPerPair}~MiB per simultaneous pair and stayed below the installed RAM. Extrapolating that slope, memory would be exhausted near \num{eSixRamLimit} simultaneous pairs; this point was not tested. One pair alone takes \num{eSixLatencyOne}~ms (key generation plus one evaluation, median [IQR]). This experiment excludes the HTTP server, SQLite and the browsers.
+
+\emph{In the browser.} Fig.~\ref{fig:heat} gives the end-to-end latency with the real stack for one to three Users and one to three assignments per Police--User pair, all assignments started at once (\num{eSixBrRows} assignment runs, \num{eSixBrFailed} failed). One assignment takes \num{eSixBrTotal}~s from the first click to the class on the Police page: \num{eSixBrSetup}~s until the collective keys are ready and \num{eSixBrInputResult}~s from the User's encrypted input to the result (median [IQR]). The native pipeline needs well under one second for the same work, so most of this time is waiting: each protocol step advances on the next one-second poll of each page. This also limits what the heat map can resolve. The cell medians lie between about 8 and 19~s and are not monotonic in the load: nine concurrent assignments took \num{eSixBrConcurrentThreeThree}~s, less than the \num{eSixBrConcurrentTwoTwo}~s of four, and the same single assignment measured \num{eSixBrConcurrentOneOne}~s in one series and \num{eSixBrSequentialOneOne}~s in another. Differences of one or two seconds therefore reflect how the polls of the pages happen to align, not load. What the data do show is that concurrency helps: three Users served one after another took \num{eSixBrSequentialThreeOne}~s against \num{eSixBrConcurrentThreeOne}~s concurrently. One repetition of the two-User, two-assignment cell stalled: two of its four assignments timed out after 90~s waiting for the User page to see the Police input. We did not find the cause; those \num{eSixBrFailed} runs are kept in the data as failures. Apart from that, nothing saturated in this range; the polling interval, not the processor or memory, bounds the latency.
 
 \begin{figure}[t]
 \centering
@@ -266,8 +273,17 @@ We ran $n$ independent Police--User pairs (key generation plus one evaluation ea
 \label{fig:e6}
 \end{figure}
 
-\subsection{Payload per Phase (E7, serialized sizes)}
-Table~\ref{tab:e7} lists the cryptographic messages of one assignment with their serialized size and the size after the base64 encoding used by the JSON API. Each client uploads \num{eSevenClientUp}~KiB per assignment, almost all of it key-generation shares and ciphertexts; the garbled circuit and the oblivious transfer together are \num{eSevenGC}~KiB. HTTP headers, JSON framing and the polling requests are not included because the real traffic was not captured.
+\begin{figure}[t]
+\centering
+\figin{fig_e6_heat.pdf}
+\caption{Median latency in seconds for all assignments of a case to finish in headless Chrome, by number of Users and assignments per pair, started concurrently. The values are not monotonic in the load: every step waits for the next one-second poll, so differences of a second or two reflect poll alignment.}
+\label{fig:heat}
+\end{figure}
+
+\subsection{Payload and Traffic per Phase (E7)}
+Table~\ref{tab:e7} lists the cryptographic messages of one assignment with their serialized size and the size after the base64 encoding used by the JSON API. Each client uploads \num{eSevenClientUp}~KiB per assignment, almost all of it key-generation shares and ciphertexts; the garbled circuit and the oblivious transfer together are \num{eSevenGC}~KiB. HTTP headers, JSON framing and polling are not in that table.
+
+\emph{Captured traffic.} Table~\ref{tab:e7tr} is the traffic of one assignment as seen by each browser through the DevTools protocol (median of \num{eSevenTrReps} runs): requests, request-body bytes sent and bytes received on the wire, by phase. The Police client makes \num{eSevenTrPoliceRequests} requests and the User client \num{eSevenTrUserRequests}, of which \num{eSevenTrPolicePoll} and \num{eSevenTrUserPoll} are session-state polls. Each client sends about \num{eSevenTrPoliceUp}~KiB (Police) and \num{eSevenTrUserUp}~KiB (User) and receives \num{eSevenTrPoliceDown} and \num{eSevenTrUserDown}~KiB. Polling dominates the request count, while the relinearization-key shares dominate the uploaded bytes. Of the bytes received, \num{eSevenTrPoliceWasm}~KiB are the WebAssembly module, which the server sent uncompressed although brotli would reduce it to \num{eNinePartyDefaultBr}~MiB (Table~\ref{tab:e9}).
 
 \begin{table}[t]
 \caption{Messages of one assignment (E7): count, base64 size of each in KiB, and total in KiB.}
@@ -276,17 +292,43 @@ Table~\ref{tab:e7} lists the cryptographic messages of one assignment with their
 \tabin{tab_e7.tex}
 \end{table}
 
+\begin{table}[t]
+\caption{Captured HTTP traffic of one assignment by phase (E7): requests (\#), request bodies sent (up) and bytes received (down) in KiB, for the Police (P) and User (U) browsers.}
+\label{tab:e7tr}
+\centering\scriptsize
+\tabin{tab_e7_traffic.tex}
+\end{table}
+
+\subsection{CPU and Memory per Participant (E8)}
+Table~\ref{tab:e8} gives, for one assignment, the working set of each participant when the client is loaded and when the result is shown, the processor time consumed during key generation and during the evaluation, and the size of the WebAssembly linear memory. Browser figures are sums over all processes of that role's Chrome instance (browser, GPU, network and renderer processes, including a dashboard tab), identified by its profile directory, so they overstate the cost of the protocol page alone; processor time is the sum of kernel and user time over those processes and includes the engine's background compilation of the module. Each browser used about \num{eEightPoliceCpuKeygen}~ms of processor time during key generation, far more than the native client work in Table~\ref{tab:e4}, and its working set was about \num{eEightPoliceWsEnd}~MiB; the server process used \num{eEightApiWsEnd}~MiB. The WebAssembly memory reaches \num{eEightPoliceWasm}~MiB in the Police tab and \num{eEightUserWasm}~MiB in the User tab, far above the size of the keys, because Go's runtime grows the linear memory and does not return it.
+
+\begin{table}[t]
+\caption{Per-participant resources for one assignment (E8, median of \num{eEightReps} runs): number of processes, working set in MiB, CPU time in ms and WebAssembly memory in MiB.}
+\label{tab:e8}
+\centering\scriptsize
+\tabin{tab_e8.tex}
+\end{table}
+
 \subsection{WebAssembly Size and Speed (E9)}
 Table~\ref{tab:e9} gives the client size per build variant and after compression. The default build made on the measurement laptop is \num{eNinePartyDefaultMiB}~MiB (\num{eNinePartyDefault} bytes); the file committed in the repository, built on another machine and toolchain, is \num{eNinePartyCommittedInRepoMiB}~MiB. Stripping symbols saves little (\num{eNinePartyStripMiB}~MiB) and \texttt{wasm-opt -Oz} brings the module to \num{eNinePartyDefaultWasmoptOzMiB}~MiB; it only accepted Go's output with all WebAssembly features enabled. Transfer compression matters far more: brotli reduces the default build to \num{eNinePartyDefaultBr}~MiB and gzip to \num{eNinePartyDefaultGz}~MiB. TinyGo was not installed, so that variant was not attempted.
 
 \emph{What makes the module heavy.} Four ablation builds answer this. The Go runtime with \texttt{syscall/js} alone is \num{eNineAblateEmptyRuntimeMiB}~MiB; adding only the garbled circuit and the oblivious transfer gives \num{eNineAblateGcOtMiB}~MiB; a program that uses only single-key BGV is already \num{eNineAblateBgvMiB}~MiB, and adding the multiparty protocols does not increase it (\num{eNineAblateMpbgvMiB}~MiB). The lattice library, not the multiparty layer or the circuit code, accounts for most of the binary. No other library offers multiparty BGV in WebAssembly that we know of, so the comparison is between build configurations of the same library.
 
-\emph{Speed.} The same harness compiled to WebAssembly and run under Node.js \num{hwNode} (\num{eNineWasmRuns} runs) needs \num{eNineSlowTotal}$\times$ the native time for one evaluation (Table~\ref{tab:e9slow}). Under Node.js, reading the module takes \num{eNineLoadRead}~ms and compiling it \num{eNineLoadCompile}~ms (median [IQR], \num{eNineLoadRuns} runs); V8 compiles functions lazily, so this is mostly validation and understates the real cost. These are not browser figures: load time in Chromium with cold and warm cache, UI-thread blocking and a Web Worker variant were not measured.
+\emph{Speed.} The same harness compiled to WebAssembly and run under Node.js \num{hwNode} (\num{eNineWasmRuns} runs) needs \num{eNineSlowTotal}$\times$ the native time for one evaluation (Table~\ref{tab:e9slow}). Under Node.js, reading the module takes \num{eNineLoadRead}~ms and compiling it \num{eNineLoadCompile}~ms (median [IQR], \num{eNineLoadRuns} runs); V8 compiles functions lazily, so this is mostly validation and understates the real cost. 
+
+\emph{Load and responsiveness in the browser.} Table~\ref{tab:e9load} gives the load time in Chrome with a cleared cache and with a warm cache: fetching the module, compiling and instantiating it, and the time until the client's entry point is available. The cryptography runs on the UI thread: during one assignment the Police page recorded a median of \num{eNineLtPoliceCount} long tasks (over 50~ms) totalling \num{eNineLtPoliceTotal}~ms, and the User page \num{eNineLtUserCount} totalling \num{eNineLtUserTotal}~ms; the longest single task was \num{eNineLtPoliceMax}~ms (Police) and \num{eNineLtUserMax}~ms (User), long enough to be felt as a frozen page. A Web Worker variant, which would move this work off the UI thread, was not built.
 \begin{table}[t]
 \caption{WebAssembly size by build variant (E9).}
 \label{tab:e9}
 \centering\scriptsize
 \tabin{tab_e9.tex}
+\end{table}
+
+\begin{table}[t]
+\caption{Client load time in headless Chrome (E9), median [IQR].}
+\label{tab:e9load}
+\centering\scriptsize
+\tabin{tab_e9_load.tex}
 \end{table}
 
 \begin{table}[t]
@@ -296,17 +338,26 @@ Table~\ref{tab:e9} gives the client size per build variant and after compression
 \tabin{tab_e9_slowdown.tex}
 \end{table}
 
-\subsection{Experiments Not Run}
-The following planned experiments are absent from this draft and no numbers are claimed for them: the Chromium latency heat map and concurrent browser sessions (part of E6); captured HTTP traffic and polling counts (part of E7); CPU and memory per browser process (E8; only native per-role times are reported, in Table~\ref{tab:e4}); a leak scan of the database, logs and HTTP traffic (part of E11); and robustness under a missing OT response, a page reload and a modified client (E13; only the quota error on a fourth evaluation was exercised, in Appendix~A).
+\subsection{Robustness (E13)}
+Table~\ref{tab:e13} summarizes four fault scenarios run in the browser (\num{eThirteenOk} of \num{eThirteenRuns} behaved as expected), in addition to the quota error of Appendix~A. When the User closes the page after publishing the first OT message, the assignment stays pending: the Police page shows no class and nothing fails. When the User reopens the page, the local state is restored from IndexedDB and the protocol completes with the correct class; the same holds when the Police reload after key generation. A script that skips the range check of the page and asks the WebAssembly client to encrypt $x = 200$ is rejected, because the client checks the range again inside the compiled module. This stops a modified page script, not a modified module: Section~\ref{sec:e2} shows that the server-side pipeline accepts such a value and returns the wrong class.
 
+\begin{table}[t]
+\caption{Robustness scenarios in the browser (E13).}
+\label{tab:e13}
+\centering\scriptsize
+\tabin{tab_e13.tex}
+\end{table}
+
+\subsection{Experiments Not Run}
+The following planned items are absent and no numbers are claimed for them: a Web Worker variant and a TinyGo build (E9); a scan of the database, the logs and captured request bodies for known coordinates (part of E11); runs on separate devices and over a real network; and repetitions with the best-performance power plan.
 \section{Conclusions}
-\todo{The first sentence of this section must answer the research question once its wording is inserted.} The measurements support the hypothesis within its stated limits: the hybrid pipeline returned the plaintext class in all \num{eOneRuns} correctness runs, and its range of validity is exactly the centered range of the plaintext modulus.
+The answer to the research question is yes, under stated conditions. The prototype lets a service provider (the server) compute on user data that it only ever holds in encrypted form, and lets a stakeholder (the Police) obtain the business logic outcome, a three-valued proximity class, without receiving the data or the intermediate value $\Delta$. The measurements support this within three limits: the outcome matched the plaintext class in all \num{eOneRuns} native correctness runs and in the browser scenarios, but only while $\Delta$ stays in the centered range of the plaintext modulus; the guarantee assumes that both clients follow the protocol; and the outcome itself leaks information when the query is repeated.
 
 \emph{Engineering implication.} The deployed parameters are oversized for a depth-one computation. A set at $N = 2^{\num{eFourBestN}}$ within the same standard table reduces client work by \num{eFourSpeedClient}$\times$ and ciphertext size by \num{eFourShrinkCt}$\times$; the cost of the garbled circuit is negligible in every configuration, so optimization effort belongs in the lattice parameters and the WebAssembly payload.
 
 \emph{Security implication.} Revealing the class instead of $\Delta$ raises the number of queries needed to locate a User from \num{eTenExactMedian} to a median of \num{eTenClassMedian}, but does not bound it; the hourly quota only stretches the attack and is weakened by colluding accounts. Two further limits were found: the flooding noise of the share conversion is below the ciphertext noise, and a deviating garbler controls the computed function.
 
-\emph{Future work.} The next steps are to raise and re-evaluate the flooding parameter, to add range proofs or a check inside the circuit for out-of-range inputs, to protect against malicious garblers, and to run the browser-level experiments (latency, traffic, memory per role, robustness) that this draft lacks, on separate devices and networks.
+\emph{Future work.} The next steps are to raise and re-evaluate the flooding parameter, to add range proofs or a check inside the circuit for out-of-range inputs, to protect against malicious garblers, to move the cryptography to a Web Worker and replace polling with server push, since the one-second poll dominates the latency, and to repeat the measurements on separate devices and networks.
 
 \begin{thebibliography}{10}
 \bibitem{bgv} Z.~Brakerski, C.~Gentry, and V.~Vaikuntanathan, ``Fully homomorphic encryption without bootstrapping,'' Cryptology ePrint Archive, Paper 2011/277, 2011. [Online]. Available: \url{https://eprint.iacr.org/2011/277}
@@ -354,6 +405,7 @@ GOTOOLCHAIN=go1.26.0 go test ./bench     # E12
 bash bench/e9_wasm.sh
 python bench/e10_leakage.py --seed 1 --points 300
 bash bench/e9_node.sh ; bash bench/browser_scenarios.sh
+node bench/browser_bench.mjs heat 5      # also: profile 10, load 30, robust
 python paper/make_assets.py
 \end{verbatim}}
 

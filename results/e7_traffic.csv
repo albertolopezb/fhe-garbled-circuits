@@ -1,0 +1,633 @@
+experiment,rep,role,phase,method,path,status,request_body_bytes,response_wire_bytes
+e7_traffic,0,police,static: other,GET,/login.html,200,0,1875
+e7_traffic,0,police,static: other,GET,/style.css,200,0,0
+e7_traffic,0,police,static: other,GET,/shared.js,200,0,0
+e7_traffic,0,police,static: other,GET,/auth.js,200,0,1975
+e7_traffic,0,police,static: other,GET,/fonts/geist.woff2,200,0,0
+e7_traffic,0,police,static: other,GET,/fonts/geist-mono.woff2,200,0,0
+e7_traffic,0,police,static: other,GET,/crypto.html,200,0,3758
+e7_traffic,0,police,static: other,GET,/style.css,200,0,0
+e7_traffic,0,police,static: other,GET,/wasm_exec.js,200,0,17325
+e7_traffic,0,police,static: other,GET,/shared.js,200,0,0
+e7_traffic,0,police,static: other,GET,/crypto.js,200,0,20071
+e7_traffic,0,police,other API,GET,/api/me,200,0,398
+e7_traffic,0,police,static: other,GET,/fonts/geist.woff2,200,0,0
+e7_traffic,0,police,static: other,GET,/fonts/geist-mono.woff2,200,0,0
+e7_traffic,0,police,other API,GET,/api/targets/{id}/context,200,0,653
+e7_traffic,0,police,polling (session state),GET,/api/sessions/{id},200,0,781
+e7_traffic,0,police,static: party.wasm,GET,/party.wasm,200,0,11802972
+e7_traffic,0,police,polling (session state),GET,/api/sessions/{id},200,0,781
+e7_traffic,0,police,polling (session state),GET,/api/sessions/{id},200,0,781
+e7_traffic,0,police,polling (session state),GET,/api/sessions/{id},200,0,781
+e7_traffic,0,police,polling (session state),GET,/api/sessions/{id},200,0,781
+e7_traffic,0,police,CPK + RLK r1 shares,POST,/api/sessions/{id}/setup/share,200,9787586,346
+e7_traffic,0,police,polling (session state),GET,/api/sessions/{id},200,0,778
+e7_traffic,0,police,CPK + RLK r1 aggregate,GET,/api/sessions/{id}/setup/artifacts,200,0,11186110
+e7_traffic,0,police,RLK r2 share,POST,/api/sessions/{id}/setup/r2,200,4194740,341
+e7_traffic,0,police,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,0,police,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,0,police,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,0,police,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,0,police,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,0,police,Ciphertexts,POST,/api/sessions/{id}/input,200,4195459,391
+e7_traffic,0,police,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,0,police,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,0,police,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,0,police,polling (session state),GET,/api/sessions/{id},200,0,774
+e7_traffic,0,police,polling (session state),GET,/api/sessions/{id},200,0,774
+e7_traffic,0,police,polling (session state),GET,/api/sessions/{id},200,0,774
+e7_traffic,0,police,polling (session state),GET,/api/sessions/{id},200,0,774
+e7_traffic,0,police,polling (session state),GET,/api/sessions/{id},200,0,774
+e7_traffic,0,police,polling (session state),GET,/api/sessions/{id},200,0,774
+e7_traffic,0,police,polling (session state),GET,/api/sessions/{id},200,0,772
+e7_traffic,0,police,polling (session state),GET,/api/sessions/{id},200,0,772
+e7_traffic,0,police,Enc(delta),GET,/api/sessions/{id}/delta,200,0,2098018
+e7_traffic,0,police,E2S share,POST,/api/sessions/{id}/e2s,200,1048683,339
+e7_traffic,0,police,polling (session state),GET,/api/sessions/{id},200,0,769
+e7_traffic,0,police,polling (session state),GET,/api/sessions/{id},200,0,769
+e7_traffic,0,police,polling (session state),GET,/api/sessions/{id},200,0,769
+e7_traffic,0,police,E2S aggregate,GET,/api/sessions/{id}/e2s,200,0,1048982
+e7_traffic,0,police,polling (session state),GET,/api/sessions/{id},200,0,769
+e7_traffic,0,police,polling (session state),GET,/api/sessions/{id},200,0,766
+e7_traffic,0,police,polling (session state),GET,/api/sessions/{id},200,0,766
+e7_traffic,0,police,polling (session state),GET,/api/sessions/{id},200,0,766
+e7_traffic,0,police,fetch otA,GET,/api/sessions/{id}/gc/otA,200,0,352
+e7_traffic,0,police,send otR,POST,/api/sessions/{id}/gc/otR,200,755,337
+e7_traffic,0,police,polling (session state),GET,/api/sessions/{id},200,0,765
+e7_traffic,0,police,polling (session state),GET,/api/sessions/{id},200,0,765
+e7_traffic,0,police,polling (session state),GET,/api/sessions/{id},200,0,765
+e7_traffic,0,police,polling (session state),GET,/api/sessions/{id},200,0,764
+e7_traffic,0,police,polling (session state),GET,/api/sessions/{id},200,0,764
+e7_traffic,0,police,polling (session state),GET,/api/sessions/{id},200,0,764
+e7_traffic,0,police,fetch garbled,GET,/api/sessions/{id}/gc/garbled,200,0,7425
+e7_traffic,0,police,fetch gcLabels,GET,/api/sessions/{id}/gc/gcLabels,200,0,673
+e7_traffic,0,police,fetch otE,GET,/api/sessions/{id}/gc/otE,200,0,1037
+e7_traffic,0,police,Result,POST,/api/targets/{id}/result,200,93,374
+e7_traffic,0,user,static: other,GET,/login.html,200,0,1875
+e7_traffic,0,user,static: other,GET,/style.css,200,0,0
+e7_traffic,0,user,static: other,GET,/shared.js,200,0,0
+e7_traffic,0,user,static: other,GET,/auth.js,200,0,1975
+e7_traffic,0,user,static: other,GET,/fonts/geist.woff2,200,0,0
+e7_traffic,0,user,static: other,GET,/fonts/geist-mono.woff2,200,0,23449
+e7_traffic,0,user,static: other,GET,/crypto.html,200,0,3758
+e7_traffic,0,user,static: other,GET,/style.css,200,0,0
+e7_traffic,0,user,static: other,GET,/wasm_exec.js,200,0,17325
+e7_traffic,0,user,static: other,GET,/shared.js,200,0,0
+e7_traffic,0,user,static: other,GET,/crypto.js,200,0,20071
+e7_traffic,0,user,other API,GET,/api/me,200,0,401
+e7_traffic,0,user,static: other,GET,/fonts/geist.woff2,200,0,0
+e7_traffic,0,user,static: other,GET,/fonts/geist-mono.woff2,200,0,0
+e7_traffic,0,user,other API,GET,/api/targets/{id}/context,200,0,652
+e7_traffic,0,user,polling (session state),GET,/api/sessions/{id},200,0,781
+e7_traffic,0,user,static: party.wasm,GET,/party.wasm,200,0,11802972
+e7_traffic,0,user,polling (session state),GET,/api/sessions/{id},200,0,781
+e7_traffic,0,user,polling (session state),GET,/api/sessions/{id},200,0,781
+e7_traffic,0,user,polling (session state),GET,/api/sessions/{id},200,0,781
+e7_traffic,0,user,polling (session state),GET,/api/sessions/{id},200,0,781
+e7_traffic,0,user,CPK + RLK r1 shares,POST,/api/sessions/{id}/setup/share,200,9787587,346
+e7_traffic,0,user,polling (session state),GET,/api/sessions/{id},200,0,778
+e7_traffic,0,user,CPK + RLK r1 aggregate,GET,/api/sessions/{id}/setup/artifacts,200,0,11186110
+e7_traffic,0,user,RLK r2 share,POST,/api/sessions/{id}/setup/r2,200,4194741,341
+e7_traffic,0,user,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,0,user,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,0,user,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,0,user,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,0,user,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,0,user,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,0,user,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,0,user,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,0,user,polling (session state),GET,/api/sessions/{id},200,0,774
+e7_traffic,0,user,polling (session state),GET,/api/sessions/{id},200,0,774
+e7_traffic,0,user,polling (session state),GET,/api/sessions/{id},200,0,774
+e7_traffic,0,user,Ciphertexts,POST,/api/sessions/{id}/input,200,4195460,391
+e7_traffic,0,user,polling (session state),GET,/api/sessions/{id},200,0,772
+e7_traffic,0,user,polling (session state),GET,/api/sessions/{id},200,0,772
+e7_traffic,0,user,Enc(delta),GET,/api/sessions/{id}/delta,200,0,2098018
+e7_traffic,0,user,E2S share,POST,/api/sessions/{id}/e2s,200,1048684,339
+e7_traffic,0,user,polling (session state),GET,/api/sessions/{id},200,0,769
+e7_traffic,0,user,polling (session state),GET,/api/sessions/{id},200,0,769
+e7_traffic,0,user,polling (session state),GET,/api/sessions/{id},200,0,769
+e7_traffic,0,user,E2S aggregate,GET,/api/sessions/{id}/e2s,200,0,1048982
+e7_traffic,0,user,polling (session state),GET,/api/sessions/{id},200,0,769
+e7_traffic,0,user,send garbled,POST,/api/sessions/{id}/gc/garbled,200,7124,337
+e7_traffic,0,user,send gcLabels,POST,/api/sessions/{id}/gc/gcLabels,200,392,337
+e7_traffic,0,user,send otA,POST,/api/sessions/{id}/gc/otA,200,72,337
+e7_traffic,0,user,polling (session state),GET,/api/sessions/{id},200,0,766
+e7_traffic,0,user,polling (session state),GET,/api/sessions/{id},200,0,766
+e7_traffic,0,user,polling (session state),GET,/api/sessions/{id},200,0,766
+e7_traffic,0,user,polling (session state),GET,/api/sessions/{id},200,0,765
+e7_traffic,0,user,polling (session state),GET,/api/sessions/{id},200,0,765
+e7_traffic,0,user,polling (session state),GET,/api/sessions/{id},200,0,765
+e7_traffic,0,user,fetch otR,GET,/api/sessions/{id}/gc/otR,200,0,1037
+e7_traffic,0,user,send otE,POST,/api/sessions/{id}/gc/otE,200,756,337
+e7_traffic,0,user,polling (session state),GET,/api/sessions/{id},200,0,764
+e7_traffic,0,user,polling (session state),GET,/api/sessions/{id},200,0,764
+e7_traffic,0,user,polling (session state),GET,/api/sessions/{id},200,0,764
+e7_traffic,1,police,static: other,GET,/login.html,200,0,1875
+e7_traffic,1,police,static: other,GET,/style.css,200,0,0
+e7_traffic,1,police,static: other,GET,/shared.js,200,0,0
+e7_traffic,1,police,static: other,GET,/auth.js,200,0,1975
+e7_traffic,1,police,static: other,GET,/fonts/geist.woff2,200,0,0
+e7_traffic,1,police,static: other,GET,/fonts/geist-mono.woff2,200,0,0
+e7_traffic,1,police,static: other,GET,/crypto.html,200,0,3758
+e7_traffic,1,police,static: other,GET,/style.css,200,0,0
+e7_traffic,1,police,static: other,GET,/wasm_exec.js,200,0,17325
+e7_traffic,1,police,static: other,GET,/shared.js,200,0,0
+e7_traffic,1,police,static: other,GET,/crypto.js,200,0,20071
+e7_traffic,1,police,other API,GET,/api/me,200,0,398
+e7_traffic,1,police,static: other,GET,/fonts/geist.woff2,200,0,0
+e7_traffic,1,police,static: other,GET,/fonts/geist-mono.woff2,200,0,0
+e7_traffic,1,police,other API,GET,/api/targets/{id}/context,200,0,653
+e7_traffic,1,police,polling (session state),GET,/api/sessions/{id},200,0,781
+e7_traffic,1,police,static: party.wasm,GET,/party.wasm,200,0,11802972
+e7_traffic,1,police,polling (session state),GET,/api/sessions/{id},200,0,781
+e7_traffic,1,police,polling (session state),GET,/api/sessions/{id},200,0,781
+e7_traffic,1,police,polling (session state),GET,/api/sessions/{id},200,0,781
+e7_traffic,1,police,polling (session state),GET,/api/sessions/{id},200,0,781
+e7_traffic,1,police,polling (session state),GET,/api/sessions/{id},200,0,781
+e7_traffic,1,police,polling (session state),GET,/api/sessions/{id},200,0,781
+e7_traffic,1,police,polling (session state),GET,/api/sessions/{id},200,0,781
+e7_traffic,1,police,CPK + RLK r1 shares,POST,/api/sessions/{id}/setup/share,200,9787586,346
+e7_traffic,1,police,polling (session state),GET,/api/sessions/{id},200,0,778
+e7_traffic,1,police,CPK + RLK r1 aggregate,GET,/api/sessions/{id}/setup/artifacts,200,0,11186110
+e7_traffic,1,police,RLK r2 share,POST,/api/sessions/{id}/setup/r2,200,4194740,341
+e7_traffic,1,police,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,1,police,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,1,police,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,1,police,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,1,police,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,1,police,Ciphertexts,POST,/api/sessions/{id}/input,200,4195459,391
+e7_traffic,1,police,polling (session state),GET,/api/sessions/{id},200,0,776
+e7_traffic,1,police,polling (session state),GET,/api/sessions/{id},200,0,776
+e7_traffic,1,police,polling (session state),GET,/api/sessions/{id},200,0,776
+e7_traffic,1,police,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,1,police,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,1,police,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,1,police,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,1,police,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,1,police,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,1,police,polling (session state),GET,/api/sessions/{id},200,0,773
+e7_traffic,1,police,polling (session state),GET,/api/sessions/{id},200,0,773
+e7_traffic,1,police,Enc(delta),GET,/api/sessions/{id}/delta,200,0,2098018
+e7_traffic,1,police,E2S share,POST,/api/sessions/{id}/e2s,200,1048683,339
+e7_traffic,1,police,polling (session state),GET,/api/sessions/{id},200,0,770
+e7_traffic,1,police,polling (session state),GET,/api/sessions/{id},200,0,770
+e7_traffic,1,police,polling (session state),GET,/api/sessions/{id},200,0,770
+e7_traffic,1,police,E2S aggregate,GET,/api/sessions/{id}/e2s,200,0,1048982
+e7_traffic,1,police,polling (session state),GET,/api/sessions/{id},200,0,770
+e7_traffic,1,police,polling (session state),GET,/api/sessions/{id},200,0,767
+e7_traffic,1,police,polling (session state),GET,/api/sessions/{id},200,0,767
+e7_traffic,1,police,polling (session state),GET,/api/sessions/{id},200,0,767
+e7_traffic,1,police,fetch otA,GET,/api/sessions/{id}/gc/otA,200,0,352
+e7_traffic,1,police,send otR,POST,/api/sessions/{id}/gc/otR,200,755,337
+e7_traffic,1,police,polling (session state),GET,/api/sessions/{id},200,0,766
+e7_traffic,1,police,polling (session state),GET,/api/sessions/{id},200,0,766
+e7_traffic,1,police,polling (session state),GET,/api/sessions/{id},200,0,766
+e7_traffic,1,police,polling (session state),GET,/api/sessions/{id},200,0,765
+e7_traffic,1,police,polling (session state),GET,/api/sessions/{id},200,0,765
+e7_traffic,1,police,polling (session state),GET,/api/sessions/{id},200,0,765
+e7_traffic,1,police,fetch garbled,GET,/api/sessions/{id}/gc/garbled,200,0,7425
+e7_traffic,1,police,fetch gcLabels,GET,/api/sessions/{id}/gc/gcLabels,200,0,673
+e7_traffic,1,police,fetch otE,GET,/api/sessions/{id}/gc/otE,200,0,1037
+e7_traffic,1,police,Result,POST,/api/targets/{id}/result,200,93,374
+e7_traffic,1,user,static: other,GET,/login.html,200,0,1875
+e7_traffic,1,user,static: other,GET,/style.css,200,0,0
+e7_traffic,1,user,static: other,GET,/shared.js,200,0,0
+e7_traffic,1,user,static: other,GET,/auth.js,200,0,1975
+e7_traffic,1,user,static: other,GET,/fonts/geist.woff2,200,0,0
+e7_traffic,1,user,static: other,GET,/fonts/geist-mono.woff2,200,0,23449
+e7_traffic,1,user,static: other,GET,/crypto.html,200,0,3758
+e7_traffic,1,user,static: other,GET,/style.css,200,0,0
+e7_traffic,1,user,static: other,GET,/wasm_exec.js,200,0,17325
+e7_traffic,1,user,static: other,GET,/shared.js,200,0,0
+e7_traffic,1,user,static: other,GET,/crypto.js,200,0,20071
+e7_traffic,1,user,static: other,GET,/fonts/geist.woff2,200,0,0
+e7_traffic,1,user,static: other,GET,/fonts/geist-mono.woff2,200,0,0
+e7_traffic,1,user,other API,GET,/api/me,200,0,401
+e7_traffic,1,user,other API,GET,/api/targets/{id}/context,200,0,652
+e7_traffic,1,user,polling (session state),GET,/api/sessions/{id},200,0,781
+e7_traffic,1,user,static: party.wasm,GET,/party.wasm,200,0,11802972
+e7_traffic,1,user,polling (session state),GET,/api/sessions/{id},200,0,781
+e7_traffic,1,user,polling (session state),GET,/api/sessions/{id},200,0,781
+e7_traffic,1,user,polling (session state),GET,/api/sessions/{id},200,0,781
+e7_traffic,1,user,polling (session state),GET,/api/sessions/{id},200,0,781
+e7_traffic,1,user,CPK + RLK r1 shares,POST,/api/sessions/{id}/setup/share,200,9787587,346
+e7_traffic,1,user,polling (session state),GET,/api/sessions/{id},200,0,781
+e7_traffic,1,user,polling (session state),GET,/api/sessions/{id},200,0,781
+e7_traffic,1,user,polling (session state),GET,/api/sessions/{id},200,0,781
+e7_traffic,1,user,polling (session state),GET,/api/sessions/{id},200,0,778
+e7_traffic,1,user,CPK + RLK r1 aggregate,GET,/api/sessions/{id}/setup/artifacts,200,0,11186110
+e7_traffic,1,user,RLK r2 share,POST,/api/sessions/{id}/setup/r2,200,4194741,341
+e7_traffic,1,user,polling (session state),GET,/api/sessions/{id},200,0,777
+e7_traffic,1,user,polling (session state),GET,/api/sessions/{id},200,0,777
+e7_traffic,1,user,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,1,user,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,1,user,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,1,user,polling (session state),GET,/api/sessions/{id},200,0,776
+e7_traffic,1,user,polling (session state),GET,/api/sessions/{id},200,0,776
+e7_traffic,1,user,polling (session state),GET,/api/sessions/{id},200,0,776
+e7_traffic,1,user,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,1,user,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,1,user,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,1,user,Ciphertexts,POST,/api/sessions/{id}/input,200,4195460,391
+e7_traffic,1,user,polling (session state),GET,/api/sessions/{id},200,0,773
+e7_traffic,1,user,polling (session state),GET,/api/sessions/{id},200,0,773
+e7_traffic,1,user,Enc(delta),GET,/api/sessions/{id}/delta,200,0,2098018
+e7_traffic,1,user,E2S share,POST,/api/sessions/{id}/e2s,200,1048684,339
+e7_traffic,1,user,polling (session state),GET,/api/sessions/{id},200,0,772
+e7_traffic,1,user,polling (session state),GET,/api/sessions/{id},200,0,770
+e7_traffic,1,user,polling (session state),GET,/api/sessions/{id},200,0,770
+e7_traffic,1,user,E2S aggregate,GET,/api/sessions/{id}/e2s,200,0,1048982
+e7_traffic,1,user,polling (session state),GET,/api/sessions/{id},200,0,770
+e7_traffic,1,user,send garbled,POST,/api/sessions/{id}/gc/garbled,200,7124,337
+e7_traffic,1,user,send gcLabels,POST,/api/sessions/{id}/gc/gcLabels,200,392,337
+e7_traffic,1,user,send otA,POST,/api/sessions/{id}/gc/otA,200,72,337
+e7_traffic,1,user,polling (session state),GET,/api/sessions/{id},200,0,767
+e7_traffic,1,user,polling (session state),GET,/api/sessions/{id},200,0,767
+e7_traffic,1,user,polling (session state),GET,/api/sessions/{id},200,0,767
+e7_traffic,1,user,polling (session state),GET,/api/sessions/{id},200,0,766
+e7_traffic,1,user,polling (session state),GET,/api/sessions/{id},200,0,766
+e7_traffic,1,user,polling (session state),GET,/api/sessions/{id},200,0,766
+e7_traffic,1,user,fetch otR,GET,/api/sessions/{id}/gc/otR,200,0,1037
+e7_traffic,1,user,send otE,POST,/api/sessions/{id}/gc/otE,200,756,337
+e7_traffic,1,user,polling (session state),GET,/api/sessions/{id},200,0,765
+e7_traffic,1,user,polling (session state),GET,/api/sessions/{id},200,0,765
+e7_traffic,1,user,polling (session state),GET,/api/sessions/{id},200,0,765
+e7_traffic,2,police,static: other,GET,/login.html,200,0,1875
+e7_traffic,2,police,static: other,GET,/style.css,200,0,0
+e7_traffic,2,police,static: other,GET,/shared.js,200,0,0
+e7_traffic,2,police,static: other,GET,/auth.js,200,0,1975
+e7_traffic,2,police,static: other,GET,/fonts/geist.woff2,200,0,0
+e7_traffic,2,police,static: other,GET,/fonts/geist-mono.woff2,200,0,0
+e7_traffic,2,police,static: other,GET,/crypto.html,200,0,3758
+e7_traffic,2,police,static: other,GET,/style.css,200,0,0
+e7_traffic,2,police,static: other,GET,/wasm_exec.js,200,0,17325
+e7_traffic,2,police,static: other,GET,/shared.js,200,0,0
+e7_traffic,2,police,static: other,GET,/crypto.js,200,0,20071
+e7_traffic,2,police,other API,GET,/api/me,200,0,398
+e7_traffic,2,police,static: other,GET,/fonts/geist.woff2,200,0,0
+e7_traffic,2,police,static: other,GET,/fonts/geist-mono.woff2,200,0,0
+e7_traffic,2,police,other API,GET,/api/targets/{id}/context,200,0,653
+e7_traffic,2,police,polling (session state),GET,/api/sessions/{id},200,0,781
+e7_traffic,2,police,static: party.wasm,GET,/party.wasm,200,0,11802972
+e7_traffic,2,police,polling (session state),GET,/api/sessions/{id},200,0,781
+e7_traffic,2,police,polling (session state),GET,/api/sessions/{id},200,0,781
+e7_traffic,2,police,polling (session state),GET,/api/sessions/{id},200,0,781
+e7_traffic,2,police,polling (session state),GET,/api/sessions/{id},200,0,781
+e7_traffic,2,police,CPK + RLK r1 shares,POST,/api/sessions/{id}/setup/share,200,9787586,346
+e7_traffic,2,police,polling (session state),GET,/api/sessions/{id},200,0,778
+e7_traffic,2,police,CPK + RLK r1 aggregate,GET,/api/sessions/{id}/setup/artifacts,200,0,11186110
+e7_traffic,2,police,RLK r2 share,POST,/api/sessions/{id}/setup/r2,200,4194740,341
+e7_traffic,2,police,polling (session state),GET,/api/sessions/{id},200,0,777
+e7_traffic,2,police,polling (session state),GET,/api/sessions/{id},200,0,777
+e7_traffic,2,police,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,2,police,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,2,police,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,2,police,Ciphertexts,POST,/api/sessions/{id}/input,200,4195459,391
+e7_traffic,2,police,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,2,police,polling (session state),GET,/api/sessions/{id},200,0,774
+e7_traffic,2,police,polling (session state),GET,/api/sessions/{id},200,0,774
+e7_traffic,2,police,polling (session state),GET,/api/sessions/{id},200,0,774
+e7_traffic,2,police,polling (session state),GET,/api/sessions/{id},200,0,774
+e7_traffic,2,police,polling (session state),GET,/api/sessions/{id},200,0,774
+e7_traffic,2,police,polling (session state),GET,/api/sessions/{id},200,0,772
+e7_traffic,2,police,polling (session state),GET,/api/sessions/{id},200,0,772
+e7_traffic,2,police,Enc(delta),GET,/api/sessions/{id}/delta,200,0,2098018
+e7_traffic,2,police,E2S share,POST,/api/sessions/{id}/e2s,200,1048683,339
+e7_traffic,2,police,polling (session state),GET,/api/sessions/{id},200,0,769
+e7_traffic,2,police,polling (session state),GET,/api/sessions/{id},200,0,769
+e7_traffic,2,police,polling (session state),GET,/api/sessions/{id},200,0,769
+e7_traffic,2,police,E2S aggregate,GET,/api/sessions/{id}/e2s,200,0,1048982
+e7_traffic,2,police,polling (session state),GET,/api/sessions/{id},200,0,769
+e7_traffic,2,police,polling (session state),GET,/api/sessions/{id},200,0,766
+e7_traffic,2,police,polling (session state),GET,/api/sessions/{id},200,0,766
+e7_traffic,2,police,polling (session state),GET,/api/sessions/{id},200,0,766
+e7_traffic,2,police,fetch otA,GET,/api/sessions/{id}/gc/otA,200,0,352
+e7_traffic,2,police,send otR,POST,/api/sessions/{id}/gc/otR,200,755,337
+e7_traffic,2,police,polling (session state),GET,/api/sessions/{id},200,0,765
+e7_traffic,2,police,polling (session state),GET,/api/sessions/{id},200,0,765
+e7_traffic,2,police,polling (session state),GET,/api/sessions/{id},200,0,765
+e7_traffic,2,police,polling (session state),GET,/api/sessions/{id},200,0,764
+e7_traffic,2,police,polling (session state),GET,/api/sessions/{id},200,0,764
+e7_traffic,2,police,polling (session state),GET,/api/sessions/{id},200,0,764
+e7_traffic,2,police,fetch garbled,GET,/api/sessions/{id}/gc/garbled,200,0,7425
+e7_traffic,2,police,fetch gcLabels,GET,/api/sessions/{id}/gc/gcLabels,200,0,673
+e7_traffic,2,police,fetch otE,GET,/api/sessions/{id}/gc/otE,200,0,1037
+e7_traffic,2,police,Result,POST,/api/targets/{id}/result,200,93,374
+e7_traffic,2,user,static: other,GET,/login.html,200,0,1875
+e7_traffic,2,user,static: other,GET,/style.css,200,0,0
+e7_traffic,2,user,static: other,GET,/shared.js,200,0,0
+e7_traffic,2,user,static: other,GET,/auth.js,200,0,1975
+e7_traffic,2,user,static: other,GET,/fonts/geist.woff2,200,0,0
+e7_traffic,2,user,static: other,GET,/fonts/geist-mono.woff2,200,0,23449
+e7_traffic,2,user,static: other,GET,/crypto.html,200,0,3758
+e7_traffic,2,user,static: other,GET,/style.css,200,0,0
+e7_traffic,2,user,static: other,GET,/wasm_exec.js,200,0,17325
+e7_traffic,2,user,static: other,GET,/shared.js,200,0,0
+e7_traffic,2,user,static: other,GET,/crypto.js,200,0,20071
+e7_traffic,2,user,other API,GET,/api/me,200,0,401
+e7_traffic,2,user,static: other,GET,/fonts/geist.woff2,200,0,0
+e7_traffic,2,user,static: other,GET,/fonts/geist-mono.woff2,200,0,0
+e7_traffic,2,user,other API,GET,/api/targets/{id}/context,200,0,652
+e7_traffic,2,user,polling (session state),GET,/api/sessions/{id},200,0,781
+e7_traffic,2,user,static: party.wasm,GET,/party.wasm,200,0,11802972
+e7_traffic,2,user,polling (session state),GET,/api/sessions/{id},200,0,781
+e7_traffic,2,user,polling (session state),GET,/api/sessions/{id},200,0,781
+e7_traffic,2,user,polling (session state),GET,/api/sessions/{id},200,0,781
+e7_traffic,2,user,polling (session state),GET,/api/sessions/{id},200,0,781
+e7_traffic,2,user,CPK + RLK r1 shares,POST,/api/sessions/{id}/setup/share,200,9787587,346
+e7_traffic,2,user,polling (session state),GET,/api/sessions/{id},200,0,780
+e7_traffic,2,user,polling (session state),GET,/api/sessions/{id},200,0,780
+e7_traffic,2,user,polling (session state),GET,/api/sessions/{id},200,0,780
+e7_traffic,2,user,polling (session state),GET,/api/sessions/{id},200,0,777
+e7_traffic,2,user,CPK + RLK r1 aggregate,GET,/api/sessions/{id}/setup/artifacts,200,0,11186110
+e7_traffic,2,user,RLK r2 share,POST,/api/sessions/{id}/setup/r2,200,4194741,341
+e7_traffic,2,user,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,2,user,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,2,user,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,2,user,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,2,user,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,2,user,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,2,user,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,2,user,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,2,user,polling (session state),GET,/api/sessions/{id},200,0,774
+e7_traffic,2,user,polling (session state),GET,/api/sessions/{id},200,0,774
+e7_traffic,2,user,polling (session state),GET,/api/sessions/{id},200,0,774
+e7_traffic,2,user,Ciphertexts,POST,/api/sessions/{id}/input,200,4195460,391
+e7_traffic,2,user,polling (session state),GET,/api/sessions/{id},200,0,772
+e7_traffic,2,user,polling (session state),GET,/api/sessions/{id},200,0,772
+e7_traffic,2,user,Enc(delta),GET,/api/sessions/{id}/delta,200,0,2098018
+e7_traffic,2,user,E2S share,POST,/api/sessions/{id}/e2s,200,1048684,339
+e7_traffic,2,user,polling (session state),GET,/api/sessions/{id},200,0,771
+e7_traffic,2,user,polling (session state),GET,/api/sessions/{id},200,0,769
+e7_traffic,2,user,polling (session state),GET,/api/sessions/{id},200,0,769
+e7_traffic,2,user,E2S aggregate,GET,/api/sessions/{id}/e2s,200,0,1048982
+e7_traffic,2,user,polling (session state),GET,/api/sessions/{id},200,0,769
+e7_traffic,2,user,send garbled,POST,/api/sessions/{id}/gc/garbled,200,7124,337
+e7_traffic,2,user,send gcLabels,POST,/api/sessions/{id}/gc/gcLabels,200,392,337
+e7_traffic,2,user,send otA,POST,/api/sessions/{id}/gc/otA,200,72,337
+e7_traffic,2,user,polling (session state),GET,/api/sessions/{id},200,0,766
+e7_traffic,2,user,polling (session state),GET,/api/sessions/{id},200,0,766
+e7_traffic,2,user,polling (session state),GET,/api/sessions/{id},200,0,766
+e7_traffic,2,user,polling (session state),GET,/api/sessions/{id},200,0,765
+e7_traffic,2,user,polling (session state),GET,/api/sessions/{id},200,0,765
+e7_traffic,2,user,polling (session state),GET,/api/sessions/{id},200,0,765
+e7_traffic,2,user,fetch otR,GET,/api/sessions/{id}/gc/otR,200,0,1037
+e7_traffic,2,user,send otE,POST,/api/sessions/{id}/gc/otE,200,756,337
+e7_traffic,2,user,polling (session state),GET,/api/sessions/{id},200,0,764
+e7_traffic,2,user,polling (session state),GET,/api/sessions/{id},200,0,764
+e7_traffic,2,user,polling (session state),GET,/api/sessions/{id},200,0,764
+e7_traffic,3,police,static: other,GET,/login.html,200,0,1875
+e7_traffic,3,police,static: other,GET,/style.css,200,0,0
+e7_traffic,3,police,static: other,GET,/shared.js,200,0,0
+e7_traffic,3,police,static: other,GET,/auth.js,200,0,1975
+e7_traffic,3,police,static: other,GET,/fonts/geist.woff2,200,0,0
+e7_traffic,3,police,static: other,GET,/fonts/geist-mono.woff2,200,0,0
+e7_traffic,3,police,static: other,GET,/crypto.html,200,0,3758
+e7_traffic,3,police,static: other,GET,/style.css,200,0,0
+e7_traffic,3,police,static: other,GET,/wasm_exec.js,200,0,17325
+e7_traffic,3,police,static: other,GET,/shared.js,200,0,0
+e7_traffic,3,police,static: other,GET,/crypto.js,200,0,20071
+e7_traffic,3,police,other API,GET,/api/me,200,0,398
+e7_traffic,3,police,static: other,GET,/fonts/geist.woff2,200,0,0
+e7_traffic,3,police,static: other,GET,/fonts/geist-mono.woff2,200,0,0
+e7_traffic,3,police,other API,GET,/api/targets/{id}/context,200,0,653
+e7_traffic,3,police,polling (session state),GET,/api/sessions/{id},200,0,781
+e7_traffic,3,police,static: party.wasm,GET,/party.wasm,200,0,11802972
+e7_traffic,3,police,polling (session state),GET,/api/sessions/{id},200,0,781
+e7_traffic,3,police,polling (session state),GET,/api/sessions/{id},200,0,781
+e7_traffic,3,police,polling (session state),GET,/api/sessions/{id},200,0,781
+e7_traffic,3,police,polling (session state),GET,/api/sessions/{id},200,0,781
+e7_traffic,3,police,CPK + RLK r1 shares,POST,/api/sessions/{id}/setup/share,200,9787586,346
+e7_traffic,3,police,polling (session state),GET,/api/sessions/{id},200,0,778
+e7_traffic,3,police,CPK + RLK r1 aggregate,GET,/api/sessions/{id}/setup/artifacts,200,0,11186110
+e7_traffic,3,police,RLK r2 share,POST,/api/sessions/{id}/setup/r2,200,4194740,341
+e7_traffic,3,police,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,3,police,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,3,police,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,3,police,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,3,police,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,3,police,Ciphertexts,POST,/api/sessions/{id}/input,200,4195459,391
+e7_traffic,3,police,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,3,police,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,3,police,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,3,police,polling (session state),GET,/api/sessions/{id},200,0,774
+e7_traffic,3,police,polling (session state),GET,/api/sessions/{id},200,0,774
+e7_traffic,3,police,polling (session state),GET,/api/sessions/{id},200,0,774
+e7_traffic,3,police,polling (session state),GET,/api/sessions/{id},200,0,774
+e7_traffic,3,police,polling (session state),GET,/api/sessions/{id},200,0,774
+e7_traffic,3,police,polling (session state),GET,/api/sessions/{id},200,0,774
+e7_traffic,3,police,polling (session state),GET,/api/sessions/{id},200,0,771
+e7_traffic,3,police,polling (session state),GET,/api/sessions/{id},200,0,771
+e7_traffic,3,police,Enc(delta),GET,/api/sessions/{id}/delta,200,0,2098018
+e7_traffic,3,police,E2S share,POST,/api/sessions/{id}/e2s,200,1048683,339
+e7_traffic,3,police,polling (session state),GET,/api/sessions/{id},200,0,769
+e7_traffic,3,police,polling (session state),GET,/api/sessions/{id},200,0,769
+e7_traffic,3,police,polling (session state),GET,/api/sessions/{id},200,0,769
+e7_traffic,3,police,E2S aggregate,GET,/api/sessions/{id}/e2s,200,0,1048982
+e7_traffic,3,police,polling (session state),GET,/api/sessions/{id},200,0,769
+e7_traffic,3,police,polling (session state),GET,/api/sessions/{id},200,0,766
+e7_traffic,3,police,polling (session state),GET,/api/sessions/{id},200,0,766
+e7_traffic,3,police,polling (session state),GET,/api/sessions/{id},200,0,766
+e7_traffic,3,police,fetch otA,GET,/api/sessions/{id}/gc/otA,200,0,352
+e7_traffic,3,police,send otR,POST,/api/sessions/{id}/gc/otR,200,755,337
+e7_traffic,3,police,polling (session state),GET,/api/sessions/{id},200,0,765
+e7_traffic,3,police,polling (session state),GET,/api/sessions/{id},200,0,765
+e7_traffic,3,police,polling (session state),GET,/api/sessions/{id},200,0,765
+e7_traffic,3,police,polling (session state),GET,/api/sessions/{id},200,0,764
+e7_traffic,3,police,polling (session state),GET,/api/sessions/{id},200,0,764
+e7_traffic,3,police,polling (session state),GET,/api/sessions/{id},200,0,764
+e7_traffic,3,police,fetch garbled,GET,/api/sessions/{id}/gc/garbled,200,0,7425
+e7_traffic,3,police,fetch gcLabels,GET,/api/sessions/{id}/gc/gcLabels,200,0,673
+e7_traffic,3,police,fetch otE,GET,/api/sessions/{id}/gc/otE,200,0,1037
+e7_traffic,3,police,Result,POST,/api/targets/{id}/result,200,93,374
+e7_traffic,3,user,static: other,GET,/login.html,200,0,1875
+e7_traffic,3,user,static: other,GET,/style.css,200,0,0
+e7_traffic,3,user,static: other,GET,/shared.js,200,0,0
+e7_traffic,3,user,static: other,GET,/auth.js,200,0,1975
+e7_traffic,3,user,static: other,GET,/fonts/geist.woff2,200,0,0
+e7_traffic,3,user,static: other,GET,/fonts/geist-mono.woff2,200,0,23449
+e7_traffic,3,user,static: other,GET,/crypto.html,200,0,3758
+e7_traffic,3,user,static: other,GET,/style.css,200,0,0
+e7_traffic,3,user,static: other,GET,/wasm_exec.js,200,0,17325
+e7_traffic,3,user,static: other,GET,/shared.js,200,0,0
+e7_traffic,3,user,static: other,GET,/crypto.js,200,0,20071
+e7_traffic,3,user,other API,GET,/api/me,200,0,401
+e7_traffic,3,user,static: other,GET,/fonts/geist.woff2,200,0,0
+e7_traffic,3,user,static: other,GET,/fonts/geist-mono.woff2,200,0,0
+e7_traffic,3,user,other API,GET,/api/targets/{id}/context,200,0,652
+e7_traffic,3,user,polling (session state),GET,/api/sessions/{id},200,0,781
+e7_traffic,3,user,static: party.wasm,GET,/party.wasm,200,0,11802972
+e7_traffic,3,user,polling (session state),GET,/api/sessions/{id},200,0,781
+e7_traffic,3,user,polling (session state),GET,/api/sessions/{id},200,0,781
+e7_traffic,3,user,polling (session state),GET,/api/sessions/{id},200,0,781
+e7_traffic,3,user,polling (session state),GET,/api/sessions/{id},200,0,781
+e7_traffic,3,user,CPK + RLK r1 shares,POST,/api/sessions/{id}/setup/share,200,9787587,346
+e7_traffic,3,user,polling (session state),GET,/api/sessions/{id},200,0,778
+e7_traffic,3,user,CPK + RLK r1 aggregate,GET,/api/sessions/{id}/setup/artifacts,200,0,11186110
+e7_traffic,3,user,RLK r2 share,POST,/api/sessions/{id}/setup/r2,200,4194741,341
+e7_traffic,3,user,polling (session state),GET,/api/sessions/{id},200,0,777
+e7_traffic,3,user,polling (session state),GET,/api/sessions/{id},200,0,777
+e7_traffic,3,user,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,3,user,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,3,user,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,3,user,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,3,user,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,3,user,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,3,user,polling (session state),GET,/api/sessions/{id},200,0,774
+e7_traffic,3,user,polling (session state),GET,/api/sessions/{id},200,0,774
+e7_traffic,3,user,polling (session state),GET,/api/sessions/{id},200,0,774
+e7_traffic,3,user,Ciphertexts,POST,/api/sessions/{id}/input,200,4195460,391
+e7_traffic,3,user,polling (session state),GET,/api/sessions/{id},200,0,772
+e7_traffic,3,user,polling (session state),GET,/api/sessions/{id},200,0,772
+e7_traffic,3,user,Enc(delta),GET,/api/sessions/{id}/delta,200,0,2098018
+e7_traffic,3,user,E2S share,POST,/api/sessions/{id}/e2s,200,1048684,339
+e7_traffic,3,user,polling (session state),GET,/api/sessions/{id},200,0,771
+e7_traffic,3,user,polling (session state),GET,/api/sessions/{id},200,0,771
+e7_traffic,3,user,polling (session state),GET,/api/sessions/{id},200,0,771
+e7_traffic,3,user,polling (session state),GET,/api/sessions/{id},200,0,771
+e7_traffic,3,user,polling (session state),GET,/api/sessions/{id},200,0,769
+e7_traffic,3,user,polling (session state),GET,/api/sessions/{id},200,0,769
+e7_traffic,3,user,E2S aggregate,GET,/api/sessions/{id}/e2s,200,0,1048982
+e7_traffic,3,user,polling (session state),GET,/api/sessions/{id},200,0,769
+e7_traffic,3,user,send garbled,POST,/api/sessions/{id}/gc/garbled,200,7124,337
+e7_traffic,3,user,send gcLabels,POST,/api/sessions/{id}/gc/gcLabels,200,392,337
+e7_traffic,3,user,send otA,POST,/api/sessions/{id}/gc/otA,200,72,337
+e7_traffic,3,user,polling (session state),GET,/api/sessions/{id},200,0,766
+e7_traffic,3,user,polling (session state),GET,/api/sessions/{id},200,0,766
+e7_traffic,3,user,polling (session state),GET,/api/sessions/{id},200,0,766
+e7_traffic,3,user,polling (session state),GET,/api/sessions/{id},200,0,765
+e7_traffic,3,user,polling (session state),GET,/api/sessions/{id},200,0,765
+e7_traffic,3,user,polling (session state),GET,/api/sessions/{id},200,0,765
+e7_traffic,3,user,fetch otR,GET,/api/sessions/{id}/gc/otR,200,0,1037
+e7_traffic,3,user,send otE,POST,/api/sessions/{id}/gc/otE,200,756,337
+e7_traffic,3,user,polling (session state),GET,/api/sessions/{id},200,0,764
+e7_traffic,3,user,polling (session state),GET,/api/sessions/{id},200,0,764
+e7_traffic,3,user,polling (session state),GET,/api/sessions/{id},200,0,764
+e7_traffic,4,police,static: other,GET,/login.html,200,0,1875
+e7_traffic,4,police,static: other,GET,/style.css,200,0,0
+e7_traffic,4,police,static: other,GET,/shared.js,200,0,0
+e7_traffic,4,police,static: other,GET,/auth.js,200,0,1975
+e7_traffic,4,police,static: other,GET,/fonts/geist.woff2,200,0,0
+e7_traffic,4,police,static: other,GET,/fonts/geist-mono.woff2,200,0,0
+e7_traffic,4,police,static: other,GET,/crypto.html,200,0,3758
+e7_traffic,4,police,static: other,GET,/style.css,200,0,0
+e7_traffic,4,police,static: other,GET,/wasm_exec.js,200,0,17325
+e7_traffic,4,police,static: other,GET,/shared.js,200,0,0
+e7_traffic,4,police,static: other,GET,/crypto.js,200,0,20071
+e7_traffic,4,police,other API,GET,/api/me,200,0,398
+e7_traffic,4,police,static: other,GET,/fonts/geist.woff2,200,0,0
+e7_traffic,4,police,static: other,GET,/fonts/geist-mono.woff2,200,0,0
+e7_traffic,4,police,other API,GET,/api/targets/{id}/context,200,0,653
+e7_traffic,4,police,polling (session state),GET,/api/sessions/{id},200,0,781
+e7_traffic,4,police,static: party.wasm,GET,/party.wasm,200,0,11802972
+e7_traffic,4,police,polling (session state),GET,/api/sessions/{id},200,0,781
+e7_traffic,4,police,polling (session state),GET,/api/sessions/{id},200,0,781
+e7_traffic,4,police,polling (session state),GET,/api/sessions/{id},200,0,781
+e7_traffic,4,police,polling (session state),GET,/api/sessions/{id},200,0,781
+e7_traffic,4,police,CPK + RLK r1 shares,POST,/api/sessions/{id}/setup/share,200,9787586,346
+e7_traffic,4,police,polling (session state),GET,/api/sessions/{id},200,0,778
+e7_traffic,4,police,CPK + RLK r1 aggregate,GET,/api/sessions/{id}/setup/artifacts,200,0,11186110
+e7_traffic,4,police,RLK r2 share,POST,/api/sessions/{id}/setup/r2,200,4194740,341
+e7_traffic,4,police,polling (session state),GET,/api/sessions/{id},200,0,777
+e7_traffic,4,police,polling (session state),GET,/api/sessions/{id},200,0,777
+e7_traffic,4,police,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,4,police,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,4,police,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,4,police,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,4,police,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,4,police,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,4,police,Ciphertexts,POST,/api/sessions/{id}/input,200,4195459,391
+e7_traffic,4,police,polling (session state),GET,/api/sessions/{id},200,0,774
+e7_traffic,4,police,polling (session state),GET,/api/sessions/{id},200,0,774
+e7_traffic,4,police,polling (session state),GET,/api/sessions/{id},200,0,774
+e7_traffic,4,police,polling (session state),GET,/api/sessions/{id},200,0,774
+e7_traffic,4,police,polling (session state),GET,/api/sessions/{id},200,0,774
+e7_traffic,4,police,polling (session state),GET,/api/sessions/{id},200,0,774
+e7_traffic,4,police,polling (session state),GET,/api/sessions/{id},200,0,772
+e7_traffic,4,police,polling (session state),GET,/api/sessions/{id},200,0,772
+e7_traffic,4,police,Enc(delta),GET,/api/sessions/{id}/delta,200,0,2098018
+e7_traffic,4,police,E2S share,POST,/api/sessions/{id}/e2s,200,1048683,339
+e7_traffic,4,police,polling (session state),GET,/api/sessions/{id},200,0,769
+e7_traffic,4,police,polling (session state),GET,/api/sessions/{id},200,0,769
+e7_traffic,4,police,polling (session state),GET,/api/sessions/{id},200,0,769
+e7_traffic,4,police,E2S aggregate,GET,/api/sessions/{id}/e2s,200,0,1048982
+e7_traffic,4,police,polling (session state),GET,/api/sessions/{id},200,0,769
+e7_traffic,4,police,polling (session state),GET,/api/sessions/{id},200,0,766
+e7_traffic,4,police,polling (session state),GET,/api/sessions/{id},200,0,766
+e7_traffic,4,police,polling (session state),GET,/api/sessions/{id},200,0,766
+e7_traffic,4,police,fetch otA,GET,/api/sessions/{id}/gc/otA,200,0,352
+e7_traffic,4,police,send otR,POST,/api/sessions/{id}/gc/otR,200,755,337
+e7_traffic,4,police,polling (session state),GET,/api/sessions/{id},200,0,765
+e7_traffic,4,police,polling (session state),GET,/api/sessions/{id},200,0,765
+e7_traffic,4,police,polling (session state),GET,/api/sessions/{id},200,0,765
+e7_traffic,4,police,polling (session state),GET,/api/sessions/{id},200,0,764
+e7_traffic,4,police,polling (session state),GET,/api/sessions/{id},200,0,764
+e7_traffic,4,police,polling (session state),GET,/api/sessions/{id},200,0,764
+e7_traffic,4,police,fetch garbled,GET,/api/sessions/{id}/gc/garbled,200,0,7425
+e7_traffic,4,police,fetch gcLabels,GET,/api/sessions/{id}/gc/gcLabels,200,0,673
+e7_traffic,4,police,fetch otE,GET,/api/sessions/{id}/gc/otE,200,0,1037
+e7_traffic,4,police,Result,POST,/api/targets/{id}/result,200,93,374
+e7_traffic,4,user,static: other,GET,/login.html,200,0,1875
+e7_traffic,4,user,static: other,GET,/style.css,200,0,0
+e7_traffic,4,user,static: other,GET,/shared.js,200,0,0
+e7_traffic,4,user,static: other,GET,/auth.js,200,0,1975
+e7_traffic,4,user,static: other,GET,/fonts/geist.woff2,200,0,0
+e7_traffic,4,user,static: other,GET,/fonts/geist-mono.woff2,200,0,23449
+e7_traffic,4,user,static: other,GET,/crypto.html,200,0,3758
+e7_traffic,4,user,static: other,GET,/style.css,200,0,0
+e7_traffic,4,user,static: other,GET,/wasm_exec.js,200,0,17325
+e7_traffic,4,user,static: other,GET,/shared.js,200,0,0
+e7_traffic,4,user,static: other,GET,/crypto.js,200,0,20071
+e7_traffic,4,user,other API,GET,/api/me,200,0,401
+e7_traffic,4,user,static: other,GET,/fonts/geist.woff2,200,0,0
+e7_traffic,4,user,static: other,GET,/fonts/geist-mono.woff2,200,0,0
+e7_traffic,4,user,other API,GET,/api/targets/{id}/context,200,0,652
+e7_traffic,4,user,polling (session state),GET,/api/sessions/{id},200,0,781
+e7_traffic,4,user,static: party.wasm,GET,/party.wasm,200,0,11802972
+e7_traffic,4,user,polling (session state),GET,/api/sessions/{id},200,0,781
+e7_traffic,4,user,polling (session state),GET,/api/sessions/{id},200,0,781
+e7_traffic,4,user,polling (session state),GET,/api/sessions/{id},200,0,781
+e7_traffic,4,user,polling (session state),GET,/api/sessions/{id},200,0,781
+e7_traffic,4,user,CPK + RLK r1 shares,POST,/api/sessions/{id}/setup/share,200,9787587,346
+e7_traffic,4,user,polling (session state),GET,/api/sessions/{id},200,0,778
+e7_traffic,4,user,CPK + RLK r1 aggregate,GET,/api/sessions/{id}/setup/artifacts,200,0,11186110
+e7_traffic,4,user,RLK r2 share,POST,/api/sessions/{id}/setup/r2,200,4194741,341
+e7_traffic,4,user,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,4,user,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,4,user,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,4,user,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,4,user,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,4,user,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,4,user,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,4,user,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,4,user,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,4,user,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,4,user,polling (session state),GET,/api/sessions/{id},200,0,775
+e7_traffic,4,user,polling (session state),GET,/api/sessions/{id},200,0,774
+e7_traffic,4,user,polling (session state),GET,/api/sessions/{id},200,0,774
+e7_traffic,4,user,polling (session state),GET,/api/sessions/{id},200,0,774
+e7_traffic,4,user,Ciphertexts,POST,/api/sessions/{id}/input,200,4195460,391
+e7_traffic,4,user,polling (session state),GET,/api/sessions/{id},200,0,772
+e7_traffic,4,user,polling (session state),GET,/api/sessions/{id},200,0,772
+e7_traffic,4,user,Enc(delta),GET,/api/sessions/{id}/delta,200,0,2098018
+e7_traffic,4,user,E2S share,POST,/api/sessions/{id}/e2s,200,1048684,339
+e7_traffic,4,user,polling (session state),GET,/api/sessions/{id},200,0,771
+e7_traffic,4,user,polling (session state),GET,/api/sessions/{id},200,0,769
+e7_traffic,4,user,polling (session state),GET,/api/sessions/{id},200,0,769
+e7_traffic,4,user,E2S aggregate,GET,/api/sessions/{id}/e2s,200,0,1048982
+e7_traffic,4,user,polling (session state),GET,/api/sessions/{id},200,0,769
+e7_traffic,4,user,send garbled,POST,/api/sessions/{id}/gc/garbled,200,7124,337
+e7_traffic,4,user,send gcLabels,POST,/api/sessions/{id}/gc/gcLabels,200,392,337
+e7_traffic,4,user,send otA,POST,/api/sessions/{id}/gc/otA,200,72,337
+e7_traffic,4,user,polling (session state),GET,/api/sessions/{id},200,0,766
+e7_traffic,4,user,polling (session state),GET,/api/sessions/{id},200,0,766
+e7_traffic,4,user,polling (session state),GET,/api/sessions/{id},200,0,766
+e7_traffic,4,user,polling (session state),GET,/api/sessions/{id},200,0,765
+e7_traffic,4,user,polling (session state),GET,/api/sessions/{id},200,0,765
+e7_traffic,4,user,polling (session state),GET,/api/sessions/{id},200,0,765
+e7_traffic,4,user,fetch otR,GET,/api/sessions/{id}/gc/otR,200,0,1037
+e7_traffic,4,user,send otE,POST,/api/sessions/{id}/gc/otE,200,756,337
+e7_traffic,4,user,polling (session state),GET,/api/sessions/{id},200,0,764
+e7_traffic,4,user,polling (session state),GET,/api/sessions/{id},200,0,764
+e7_traffic,4,user,polling (session state),GET,/api/sessions/{id},200,0,764
