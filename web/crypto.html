@@ -2,67 +2,89 @@
 <html lang="es">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Protocolo criptográfico · Private Proximity</title>
-  <link rel="stylesheet" href="/style.css?v=tablero" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Protocolo criptográfico · PROTECT</title>
+  <link rel="stylesheet" href="/style.css?v=clientes" />
   <script src="/wasm_exec.js"></script>
 </head>
-<body>
+<body class="protocol">
 <div class="shell">
   <header class="topbar">
-    <div class="brand"><span class="brand-mark">PP</span><span>Private Proximity</span></div>
-    <div class="user-strip"><span id="userName"></span><a id="backLink" class="button secondary" href="#">Volver</a></div>
+    <div class="brand"><span class="brand-mark" aria-hidden="true">◇</span><span>PROTECT</span><span id="roleBadge" class="role-chip">Protocolo</span></div>
+    <div class="user-strip"><span id="userName"></span><a id="backLink" class="button secondary" href="/">Volver al panel</a></div>
   </header>
   <main class="page">
-    <div class="hero"><div><span id="roleBadge" class="badge">Protocolo</span><h1 id="pageTitle">Sesión criptográfica</h1><p id="pageSubtitle" class="muted"></p></div></div>
+    <header class="hero protocol-hero">
+      <div><h1 id="pageTitle">Sesión criptográfica</h1><p id="pageSubtitle" class="muted"></p></div>
+      <dl class="session-facts">
+        <div><dt>Caso</dt><dd id="caseName">—</dd></div>
+        <div><dt>Radio público</dt><dd id="radiusText">—</dd></div>
+      </dl>
+    </header>
 
-    <div class="crypto-layout">
-      <div>
-        <section class="card">
-          <h2>1. Inicialización multiparty</h2>
-          <p class="muted">Tu secret key se genera dentro de este navegador y nunca se envía a la API. Para poder volver al dashboard sin perderla, esta demo conserva una copia serializada únicamente en <code>IndexedDB</code> local del navegador.</p>
-          <div class="actions">
-            <button id="initBtn" disabled>Generar secret key y participar en CPK/RLK</button>
-            <button id="resetBtn" class="secondary" hidden>Reiniciar sesión criptográfica</button>
-          </div>
-          <div id="cryptoStatus" class="status">Cargando party.wasm…</div>
+    <div class="protocol-layout">
+      <section aria-labelledby="progressTitle" class="workflow">
+        <h2 id="progressTitle">Pasos del protocolo</h2>
+        <ol class="protocol-steps">
+          <li id="keyStep" class="card protocol-step" data-state="waiting">
+            <div class="step-heading">
+              <span class="step-number" aria-hidden="true">1</span>
+              <h3>Generar clave local</h3>
+              <span class="step-state" data-step-state aria-live="polite">Cargando</span>
+            </div>
+            <p class="muted">Tu clave privada permanece en este navegador. Cada parte envía sus shares de configuración para construir CPK y RLK.</p>
+            <div class="actions">
+              <button id="initBtn" class="primary-action" disabled>Generar mi clave</button>
+              <button id="resetBtn" class="secondary" hidden>Reiniciar sesión</button>
+            </div>
+            <div id="cryptoStatus" class="status" role="status">Cargando módulo criptográfico…</div>
+          </li>
+
+          <li id="inputStep" class="card protocol-step" data-state="waiting">
+            <div class="step-heading">
+              <span class="step-number" aria-hidden="true">2</span>
+              <h3 id="inputTitle">Enviar ubicación cifrada</h3>
+              <span class="step-state" data-step-state aria-live="polite">En espera</span>
+            </div>
+            <p id="inputHint" class="muted">Se habilita cuando las claves colectivas estén listas.</p>
+            <div class="grid coordinates">
+              <label id="xLabel">X <input id="x" type="number" min="0" max="100" step="1" value="10" disabled /></label>
+              <label id="yLabel">Y <input id="y" type="number" min="0" max="100" step="1" value="20" disabled /></label>
+            </div>
+            <div class="actions"><button id="sendBtn" class="primary-action" disabled>Cifrar y enviar escena</button></div>
+          </li>
+
+          <li id="resultStep" class="card protocol-step" data-state="waiting">
+            <div class="step-heading">
+              <span class="step-number" aria-hidden="true">3</span>
+              <h3 id="resultTitle">Clasificación de proximidad</h3>
+              <span class="step-state" data-step-state aria-live="polite">En espera</span>
+            </div>
+            <div id="result" class="status" role="status">Esperando el envío de las ubicaciones cifradas.</div>
+          </li>
+        </ol>
+      </section>
+
+      <aside class="protocol-aside">
+        <section class="card privacy-console" aria-labelledby="consoleTitle">
+          <header class="console-heading">
+            <div><h2 id="consoleTitle">Consola de privacidad</h2><p class="muted">Eventos de este cliente durante la sesión.</p></div>
+            <span class="role-chip">Registro local</span>
+          </header>
+          <dl class="privacy-facts">
+            <div><dt>Se queda aquí</dt><dd>Coordenadas en claro y clave privada</dd></div>
+            <div><dt>Viaja a la API</dt><dd>Ciphertexts y mensajes del protocolo</dd></div>
+            <div><dt>Resultado</dt><dd>Clasificación visible en Policía</dd></div>
+          </dl>
+          <div id="sessionStatus" class="session-state" role="status">Cargando contexto…</div>
+          <div id="log" class="console" role="log" aria-label="Eventos criptográficos" tabindex="0"></div>
+          <p class="console-footnote">El registro omite claves, coordenadas, D², Δ y sus shares.</p>
         </section>
-
-        <section class="card">
-          <h2 id="inputTitle">2. Datos privados</h2>
-          <div class="grid">
-            <label id="xLabel">X <input id="x" type="number" min="0" max="100" step="1" value="10" /></label>
-            <label id="yLabel">Y <input id="y" type="number" min="0" max="100" step="1" value="20" /></label>
-          </div>
-          <div class="notice" style="margin-top:16px">Estos valores se usan localmente para crear ciphertexts. La API no recibe las coordenadas en claro.</div>
-          <div class="actions"><button id="sendBtn" disabled>Cifrar localmente y enviar ciphertexts</button></div>
-        </section>
-
-        <section class="card">
-          <h2>Resultado</h2>
-          <div id="result" class="status">Esperando el protocolo…</div>
-        </section>
-
-        <section class="card">
-          <div class="case-header"><div><h2 style="margin-bottom:4px">Consola criptográfica</h2><p class="muted" style="margin:0">Vista explicativa del flujo. No muestra coordenadas, secret keys, D² ni Δ.</p></div><button class="secondary" id="toggleConsole">Ver consola</button></div>
-          <div id="consolePanel" class="console-panel" hidden><pre id="log" class="console"></pre></div>
-        </section>
-      </div>
-
-      <aside class="card summary">
-        <h2>Sesión</h2>
-        <div id="sessionStatus" class="status">Cargando contexto…</div>
-        <div class="kv">
-          <div><span>Caso</span><strong id="caseName">—</strong></div>
-          <div><span>Persona</span><strong id="otherName">—</strong></div>
-          <div><span>Radio público</span><strong id="radiusText">—</strong></div>
-          <div><span>Servidor con SK</span><strong>No</strong></div>
-        </div>
       </aside>
     </div>
   </main>
 </div>
-<script src="/shared.js"></script>
-<script src="/crypto.js"></script>
+<script src="/shared.js?v=clientes"></script>
+<script src="/crypto.js?v=clientes"></script>
 </body>
 </html>

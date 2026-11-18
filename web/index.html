@@ -2,39 +2,35 @@
 <html lang="es">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Demo · Private Proximity</title>
-  <link rel="stylesheet" href="/style.css?v=tablero" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>PROTECT · Proximidad privada</title>
+  <link rel="stylesheet" href="/style.css?v=clientes" />
 </head>
-<body class="demo-workspace" data-active-suspect="carlos">
+<body class="landing">
   <header class="topbar">
-    <div class="brand console-brand"><span class="brand-mark" aria-hidden="true">◇</span><span>PROTECT</span><span class="console-brand-divider"></span><span class="console-brand-subtitle">Proximidad privada</span></div>
-    <a class="button secondary" href="/login.html">Modo normal</a>
+    <div class="brand console-brand"><span class="brand-mark" aria-hidden="true">◇</span> PROTECT</div>
   </header>
-  <main class="demo-workspace-main">
-    <div class="workspace-nav"><span class="workspace-nav-current"><span aria-hidden="true">◇</span> Vista de casos</span></div>
-    <div class="demo-split">
-      <section class="demo-pane" aria-labelledby="policeHeading">
-        <div class="demo-pane-bar">
-          <h1 id="policeHeading">Policía</h1>
-        </div>
-        <iframe class="demo-frame" name="pp-demo-police" title="Panel de Policía" src="/demo-login.html?account=police"></iframe>
-      </section>
-      <section class="demo-pane" aria-labelledby="suspectHeading">
-        <div class="demo-pane-bar">
-          <h2 id="suspectHeading">Sospechosos</h2>
-          <div class="demo-picker" role="group" aria-label="Seleccionar sospechoso">
-            <button type="button" class="secondary" data-account="carlos" aria-pressed="true" aria-controls="demo-carlos">Carlos</button>
-            <button type="button" class="secondary" data-account="fer" aria-pressed="false" aria-controls="demo-fer">Fer</button>
-            <button type="button" class="secondary" data-account="ximena" aria-pressed="false" aria-controls="demo-ximena">Ximena</button>
-          </div>
-        </div>
-        <iframe class="demo-frame" id="demo-carlos" name="pp-demo-carlos" title="Panel de Carlos Mendoza" src="/demo-login.html?account=carlos"></iframe>
-        <iframe class="demo-frame" id="demo-fer" name="pp-demo-fer" title="Panel de Fernanda Santos" src="/demo-login.html?account=fer" hidden></iframe>
-        <iframe class="demo-frame" id="demo-ximena" name="pp-demo-ximena" title="Panel de Ximena Villarreal" src="/demo-login.html?account=ximena" hidden></iframe>
-      </section>
-    </div>
+  <main class="page landing-page">
+    <section class="landing-hero">
+      <h1>Proximidad<br />privada</h1>
+      <p class="muted">Comprueba si dos ubicaciones están dentro de un radio. Cada navegador cifra su propio punto y Policía recibe la clasificación.</p>
+      <a class="button primary-action" href="/login.html">Iniciar sesión</a>
+      <a class="button secondary" href="/login.html" target="_blank" rel="noopener">Abrir acceso en otra pestaña ↗</a>
+    </section>
+    <section class="landing-clients" aria-label="Participantes y servidor">
+      <article class="card" data-role="police">
+        <h2>Cliente Policía</h2>
+        <p>Abre un caso, cifra la escena y recibe la clasificación de cada evaluación.</p>
+      </article>
+      <article class="card" data-role="suspect">
+        <h2>Cliente Usuario</h2>
+        <p>Entra con tu cuenta para ver tus solicitudes y autorizar el envío de tu ubicación cifrada.</p>
+      </article>
+      <article class="card">
+        <h2>API coordinadora</h2>
+        <p>Intercambia mensajes del protocolo y evalúa los datos cifrados entre ambos clientes.</p>
+      </article>
+    </section>
   </main>
-  <script src="/demo.js?v=tablero"></script>
 </body>
 </html>

@@ -21,9 +21,80 @@ let shareDone = false;
 let resultShown = false;
 let cachedDelta = "";
 let ticking = false;
+let lastStatus;
+let generatingKey = false;
 
-function log(line = "") {
-  logEl.textContent += line + "\n";
+const stepLabels = {
+  waiting: "En espera",
+  ready: "Disponible",
+  working: "En curso",
+  complete: "Completado",
+  error: "Revisar",
+};
+
+function setStep(id, state) {
+  const step = document.getElementById(id);
+  if (step.dataset.state === state) return;
+  step.dataset.state = state;
+  step.querySelector("[data-step-state]").textContent = stepLabels[state];
+  if (state === "ready" || state === "working") step.setAttribute("aria-current", "step");
+  else step.removeAttribute("aria-current");
+}
+
+function renderProgress() {
+  const st = lastStatus;
+  const saved = context?.target.status === "complete";
+  const keysReady = saved || (localInitialized && st?.setupReady && !!cpk);
+  const pointSent = saved || inputSent;
+  const done = saved || resultShown || (role === "suspect" && st?.gcMessages?.otE);
+  const sessionError = sessionStatus.classList.contains("error");
+  const keyError = sessionError || cryptoStatus.classList.contains("error");
+  const resultError = resultEl.classList.contains("error");
+
+  setStep("keyStep", keysReady ? "complete" : keyError ? "error"
+    : !initBtn.disabled ? "ready" : (generatingKey || localInitialized) ? "working" : "waiting");
+  setStep("inputStep", pointSent ? "complete" : !sendBtn.disabled ? "ready"
+    : sendingInput ? "working" : "waiting");
+  setStep("resultStep", done ? "complete" : resultError ? "error" : pointSent ? "working" : "waiting");
+
+  const inputsLocked = sendBtn.disabled || pointSent;
+  document.getElementById("x").disabled = inputsLocked;
+  document.getElementById("y").disabled = inputsLocked;
+
+  const hint = document.getElementById("inputHint");
+  const hintText = pointSent ? "Ubicación cifrada enviada."
+    : sendingInput ? "Cifrando y enviando…"
+    : !inputsLocked ? "Ingresa enteros de 0 a 100. El cifrado se realiza aquí, en tu navegador."
+    : keysReady && role === "suspect" ? "Esperando el punto de referencia de Policía."
+    : "Se habilita cuando las claves colectivas estén listas.";
+  if (hint.textContent !== hintText) hint.textContent = hintText;
+
+  if (done && role === "suspect") {
+    resultEl.className = "status ok";
+    const confirmation = "Tu participación terminó. La clasificación se entrega a Policía.";
+    if (resultEl.textContent !== confirmation) resultEl.textContent = confirmation;
+  } else if (!done && !resultError && pointSent) {
+    const waitingText = !st?.deltaReady
+      ? "Esperando el envío de la otra ubicación y la evaluación cifrada."
+      : !st.e2sReady ? "Preparando las shares para la comparación privada."
+      : st.gcMessages?.otR && !st.gcMessages.otE ? "Esperando la respuesta final de la transferencia ciega (OT)."
+      : "Ejecutando la comparación privada.";
+    if (resultEl.textContent !== waitingText) resultEl.textContent = waitingText;
+  }
+}
+
+function log(line) {
+  const match = /^\[([^\]]+)\]\s*(.*)$/.exec(line);
+  const row = document.createElement("div");
+  row.className = "console-event";
+  const tag = document.createElement("span");
+  tag.className = "console-tag";
+  tag.dataset.event = match?.[1] || "INFO";
+  tag.textContent = tag.dataset.event;
+  const message = document.createElement("span");
+  message.textContent = match?.[2] || line;
+  row.append(tag, message);
+  logEl.append(row);
   logEl.scrollTop = logEl.scrollHeight;
 }
 
@@ -123,6 +194,7 @@ async function persistLocalState(extra = {}) {
 }
 
 function syncFlagsFromServer(st) {
+  lastStatus = st;
   r2Sent = r2Sent || !!st.r2Submitted?.[role];
   inputSent = inputSent || !!st.inputSubmitted?.[role];
   e2sSent = e2sSent || !!st.e2sSubmitted?.[role];
@@ -165,12 +237,14 @@ async function restoreLocalCrypto(st) {
 
 async function initializeLocalCrypto() {
   initBtn.disabled = true;
+  generatingKey = true;
+  renderProgress();
   try {
     const st = await state();
     currentCRSSeed = st.crsSeed;
 
     if (st.setupSubmitted?.[role]) {
-      throw new Error("Esta sesión ya tiene una secret key registrada para este rol. Usa la pestaña original o reinicia la sesión criptográfica.");
+      throw new Error("Esta sesión ya tiene una clave registrada para este rol. Usa el navegador y la dirección originales o reinicia la sesión.");
     }
 
     const init = wasmCall({ op: "init", role, crsSeed: st.crsSeed });
@@ -195,9 +269,12 @@ async function initializeLocalCrypto() {
   } catch (err) {
     cryptoStatus.className = "status error";
     cryptoStatus.textContent = err.message;
-    log(`[ERROR] ${err.message}`);
+    log("[ERROR] No se pudo completar la configuración local.");
     resetBtn.hidden = false;
     initBtn.disabled = localInitialized || false;
+  } finally {
+    generatingKey = false;
+    renderProgress();
   }
 }
 
@@ -236,6 +313,7 @@ async function sendEncryptedInput() {
   if (!cpk || !localInitialized || inputSent || sendingInput || sendBtn.disabled) return;
   sendingInput = true;
   sendBtn.disabled = true;
+  renderProgress();
   try {
     const x = document.getElementById("x").valueAsNumber;
     const y = document.getElementById("y").valueAsNumber;
@@ -253,15 +331,17 @@ async function sendEncryptedInput() {
     inputSent = true;
     log("[INPUT] Coordenadas cifradas localmente bajo la CPK.");
     log("[API] Recibió ctX/ctY; no recibió las coordenadas en claro.");
+    resultEl.className = "status";
     resultEl.textContent = "Ciphertexts enviados. Esperando a la otra parte y la evaluación homomórfica…";
     await tick();
   } catch (err) {
-    log(`[ERROR INPUT] ${err.message}`);
+    log("[ERROR] No se pudo enviar la ubicación cifrada.");
     resultEl.className = "status error";
     resultEl.textContent = err.message;
     sendBtn.disabled = inputSent;
   } finally {
     sendingInput = false;
+    renderProgress();
   }
 }
 
@@ -349,14 +429,19 @@ async function advanceCircuit(st) {
     resultShown = true;
     resultEl.className = "status ok";
     resultEl.textContent = final.classification;
+    sessionStatus.textContent = "Evaluación completada";
     log(`[RESULTADO] ${final.classification}`);
   }
 }
 
 function updateStatus(st) {
   if (st.deltaReady) resetBtn.hidden = true;
-  const phase = st.gcMessages?.otE ? "mensajes del circuito listos" : st.e2sReady ? "shares de Δ listas" : st.deltaReady ? "evaluación lista" : st.setupReady ? "setup listo" : "setup en progreso";
-  sessionStatus.textContent = `Sesión activa · ${phase} · servidor con secret keys: NO`;
+  const phase = st.gcMessages?.otE ? "Comparación privada"
+    : st.e2sReady ? "Circuito y transferencia ciega"
+    : st.deltaReady ? "Conversión a shares (E2S)"
+    : st.setupReady ? "Envío de ubicaciones"
+    : "Configuración de claves";
+  if (sessionStatus.textContent !== phase) sessionStatus.textContent = phase;
 
   if (!st.setupReady && localInitialized) {
     const otherRole = role === "police" ? "suspect" : "police";
@@ -398,39 +483,42 @@ async function tick() {
     syncFlagsFromServer(st3);
     if (localInitialized) await advanceCircuit(st3);
   } catch (err) {
-    log(`[POLL] ${err.message}`);
+    log("[ERROR] No se pudo avanzar el protocolo.");
     if (err.status === 404) {
       sessionId = "";
       initBtn.disabled = sendBtn.disabled = true;
       resetBtn.hidden = true;
+      sessionStatus.classList.add("error");
       sessionStatus.textContent = "Sesión no disponible";
       resultEl.className = "status error";
       resultEl.textContent = "Esta sesión ya no está disponible. Vuelve al panel para ver tus casos o solicitudes.";
     }
   } finally {
     ticking = false;
+    renderProgress();
   }
 }
 
 function configureUI(u) {
   userName.textContent = u.displayName;
+  document.body.dataset.role = role;
   roleBadge.textContent = role === "police" ? "Cliente Policía" : "Cliente Usuario";
   pageTitle.textContent = role === "police" ? "Escena del crimen" : "Ubicación privada";
   pageSubtitle.textContent = role === "police"
     ? `Protocolo con ${context.target.suspectName}. La ubicación de la escena se cifra localmente.`
     : `Solicitud de ${context.target.policeName}. Tu ubicación no se envía en claro.`;
   caseName.textContent = context.target.caseTitle;
-  otherName.textContent = context.otherPartyName;
   radiusText.textContent = `R = ${context.target.radius}`;
   backLink.href = role === "police" ? "/police-dashboard.html" : "/suspect-dashboard.html";
 
   if (role === "police") {
-    inputTitle.textContent = "2. Cifrar escena del crimen";
+    inputTitle.textContent = "Cifrar escena del crimen";
     xLabel.firstChild.textContent = "Px ";
     yLabel.firstChild.textContent = "Py ";
     x.value = 10; y.value = 20;
   } else {
-    inputTitle.textContent = "2. Autorizar evaluación de proximidad";
+    inputTitle.textContent = "Autorizar y cifrar ubicación";
+    document.getElementById("resultTitle").textContent = "Finalizar participación";
     sendBtn.textContent = "Autorizar y enviar ubicación cifrada";
     xLabel.firstChild.textContent = "Qx ";
     yLabel.firstChild.textContent = "Qy ";
@@ -448,10 +536,14 @@ async function boot() {
   configureUI(u);
   if (context.target.status === "complete") {
     sessionStatus.textContent = "Evaluación completada";
-    resultEl.textContent = context.target.classification || "Tu participación terminó.";
+    resultEl.textContent = role === "police" ? context.target.classification : "Tu participación terminó.";
+    resultEl.className = "status ok";
+    cryptoStatus.textContent = "Configuración completada.";
+    log("[INFO] Esta evaluación ya había finalizado.");
     initBtn.disabled = true;
     sendBtn.disabled = true;
     resetBtn.hidden = true;
+    renderProgress();
     return;
   }
 
@@ -459,7 +551,7 @@ async function boot() {
   currentCRSSeed = st.crsSeed;
   await loadWasm();
 
-  log(`[AUTH] ${u.displayName} autenticado como ${role}.`);
+  log(role === "police" ? "[AUTH] Sesión de Policía iniciada." : "[AUTH] Sesión de Usuario iniciada.");
   log("[BOOT] La API coordina material público, shares y ciphertexts.");
   log("[PRIVACIDAD] La consola omite coordenadas, secret keys, D², Δ y las shares de Δ.");
 
@@ -467,11 +559,11 @@ async function boot() {
   if (!restored) {
     if (st.setupSubmitted?.[role]) {
       cryptoStatus.className = "status error";
-      cryptoStatus.textContent = "La API ya tiene una share de este rol, pero esta pestaña no tiene la secret key correspondiente. Esto ocurre al abrir la misma sesión desde otra pestaña o después de perder el estado local.";
+      cryptoStatus.textContent = "La API ya tiene una share de este rol. En este navegador y dirección no se encontró la clave local correspondiente.";
       initBtn.disabled = true;
       resetBtn.hidden = false;
-      log("[RECOVERY] El servidor conserva una share, pero esta pestaña no conserva la secret key que la creó.");
-      log("[RECOVERY] Usa la pestaña original o pulsa ‘Reiniciar sesión criptográfica’. ");
+      log("[RECOVERY] La API conserva una share. No se encontró su clave en el almacenamiento local.");
+      log("[RECOVERY] Usa el navegador y la dirección originales o pulsa «Reiniciar sesión».");
     } else {
       cryptoStatus.textContent = "party.wasm listo. Aún no se ha generado ninguna secret key para esta sesión.";
       initBtn.disabled = false;
@@ -480,6 +572,7 @@ async function boot() {
     resetBtn.hidden = false;
   }
 
+  renderProgress();
   setInterval(tick, 1000);
   await tick();
 }
@@ -494,23 +587,10 @@ async function resetCryptoSession() {
     location.reload();
   } catch (err) {
     resetBtn.disabled = false;
-    log(`[RESET ERROR] ${err.message}`);
+    log("[ERROR] No se pudo reiniciar la sesión.");
     cryptoStatus.className = "status error";
     cryptoStatus.textContent = err.message;
   }
-}
-
-toggleConsole.onclick = () => {
-  consolePanel.hidden = !consolePanel.hidden;
-  toggleConsole.textContent = consolePanel.hidden ? "Ver consola" : "Ocultar consola";
-};
-if (demoFrameAccount) {
-  window.addEventListener("message", event => {
-    if (event.source === window.parent && event.origin === location.origin &&
-        event.data === "pp-demo-pane-active") {
-      void tick();
-    }
-  });
 }
 
 initBtn.addEventListener("click", initializeLocalCrypto);
@@ -520,5 +600,6 @@ resetBtn.addEventListener("click", resetCryptoSession);
 boot().catch(err => {
   sessionStatus.className = "status error";
   sessionStatus.textContent = err.message;
-  log(`[BOOT ERROR] ${err.message}`);
+  log("[ERROR] No se pudo abrir la sesión criptográfica.");
+  renderProgress();
 });

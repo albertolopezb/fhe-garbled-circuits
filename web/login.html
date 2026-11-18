@@ -3,31 +3,28 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Acceso · Private Proximity</title>
-  <link rel="stylesheet" href="/style.css?v=tablero" />
+  <title>Acceso · PROTECT</title>
+  <link rel="stylesheet" href="/style.css?v=clientes" />
 </head>
-<body>
-<div class="auth-wrap">
-  <section class="auth-card">
-    <div class="brand"><span class="brand-mark">PP</span><span>Private Proximity</span></div>
-    <h1>Iniciar sesión</h1>
-    <p class="muted">Cada pestaña mantiene su propia sesión. Puedes tener Policía y varios usuarios abiertos al mismo tiempo.</p>
-    <form id="loginForm" class="stack">
-      <label>Correo <input id="email" type="email" autocomplete="email" required value="police@demo.local" /></label>
-      <label>Contraseña <input id="password" type="password" autocomplete="current-password" required value="Police123!" /></label>
-      <button type="submit">Entrar</button>
-    </form>
-    <div id="status" class="status" hidden></div>
-    <p class="muted">¿Eres un usuario nuevo? <a href="/register.html">Registrarte como usuario</a></p>
-    <p class="muted"><a href="/">← Volver al centro de demostración</a></p>
-    <div class="demo-box">
-      <strong>Cuentas demo</strong><br />
-      Policía: <code>police@demo.local</code> / <code>Police123!</code><br />
-      Usuarios: <code>carlos@demo.local</code>, <code>fer@demo.local</code>, <code>ximena@demo.local</code> / <code>Demo1234!</code>
-    </div>
-  </section>
-</div>
-<script src="/shared.js"></script>
+<body class="access-page">
+  <main class="auth-wrap">
+    <section class="auth-card">
+      <a class="brand console-brand" href="/"><span class="brand-mark" aria-hidden="true">◇</span> PROTECT</a>
+      <h1>Iniciar sesión</h1>
+      <p class="muted">Usa tu cuenta de Policía o de Usuario. Para entrar con otra cuenta, abre el acceso en una pestaña independiente.</p>
+      <form id="loginForm" class="stack">
+        <label>Correo <input id="email" type="email" autocomplete="username" required /></label>
+        <label>Contraseña <input id="password" type="password" autocomplete="current-password" required /></label>
+        <button type="submit" class="primary-action">Entrar</button>
+      </form>
+      <div id="status" class="status" role="status" hidden></div>
+      <div class="access-links">
+        <a href="/register.html">Crear cuenta de usuario</a>
+        <a href="/login.html" target="_blank" rel="noopener">Otra pestaña ↗</a>
+      </div>
+    </section>
+  </main>
+<script src="/shared.js?v=clientes"></script>
 <script src="/auth.js"></script>
 </body>
 </html>

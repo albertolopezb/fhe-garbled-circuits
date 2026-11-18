@@ -1,12 +1,4 @@
-// Same-origin iframes share sessionStorage. Give every demo role its own key.
-const demoFrameAccount = window.parent !== window
-  ? /^pp-demo-(police|carlos|fer|ximena)$/.exec(window.name)?.[1]
-  : undefined;
-const AUTH_TOKEN_KEY = demoFrameAccount ? `pp_auth_token:demo:${demoFrameAccount}` : "pp_auth_token";
-if (demoFrameAccount) {
-  document.documentElement.classList.add("demo-embedded");
-  document.documentElement.dataset.account = demoFrameAccount;
-}
+const AUTH_TOKEN_KEY = "pp_auth_token";
 
 function getAuthToken() {
   return sessionStorage.getItem(AUTH_TOKEN_KEY) || "";
@@ -23,8 +15,8 @@ async function api(path, options = {}) {
   if (token) headers.Authorization = `Bearer ${token}`;
 
   const res = await fetch(path, {
-    credentials: demoFrameAccount ? "omit" : "same-origin",
     ...options,
+    credentials: "omit",
     headers,
   });
   const data = await res.json().catch(() => ({}));
@@ -33,9 +25,7 @@ async function api(path, options = {}) {
       setAuthToken("");
       const publicPages = ["/", "/login.html", "/register.html", "/demo-login.html"];
       if (!publicPages.includes(location.pathname)) {
-        location.replace(demoFrameAccount
-          ? `/demo-login.html?account=${demoFrameAccount}`
-          : "/login.html");
+        location.replace("/login.html");
       }
     }
     const retryAfter = Number(res.headers.get("Retry-After"));
@@ -67,7 +57,7 @@ async function logout() {
     await api("/api/auth/logout", { method: "POST", body: "{}" });
   } catch (_) {}
   setAuthToken("");
-  location.href = "/";
+  location.href = "/login.html";
 }
 
 function initials(name = "?") {

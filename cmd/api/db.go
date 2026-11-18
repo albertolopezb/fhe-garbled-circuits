@@ -131,7 +131,7 @@ func seedDemoUsers() error {
 		{"Oficial Demo", "police@demo.local", "Police123!", "police"},
 		{"Carlos Mendoza", "carlos@demo.local", "Demo1234!", "suspect"},
 		{"Fernanda Santos", "fer@demo.local", "Demo1234!", "suspect"},
-		{"Ximena Villarreal", "ximena@demo.local", "Demo1234!", "suspect"},
+		{"Alberto Villarreal", "alberto@demo.local", "Demo1234!", "suspect"},
 	}
 
 	for _, s := range seeds {

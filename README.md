@@ -1,6 +1,6 @@
 # Private Proximity · Multi-tab Auth + SQLite + Lattigo/WASM
 
-**Private proximity check with homomorphic encryption and garbled circuits.** A demo in which the police can find out whether a suspect was inside the radius of a crime scene **without either side revealing their coordinates**, and without learning the exact distance. Locations are encrypted in the browser with multiparty BGV homomorphic encryption ([Lattigo](https://github.com/tuneinsight/lattigo) v6, compiled to WebAssembly). The squared-distance margin is then converted into secret shares and fed to a garbled circuit, so the only output is one of three results: inside the radius, outside the radius, or exactly on the boundary. The backend is a Go API with SQLite that never sees anything in clear.
+**Private proximity check with homomorphic encryption and garbled circuits.** A demo in which the police can find out whether a suspect was inside the radius of a crime scene **without either side revealing their coordinates**, and without learning the exact distance. Locations are encrypted in the browser with multiparty BGV homomorphic encryption ([Lattigo](https://github.com/tuneinsight/lattigo) v6, compiled to WebAssembly). The squared-distance margin is then converted into secret shares and fed to a garbled circuit, so the only output is one of three results: inside the radius, outside the radius, or exactly on the boundary. The Go API coordinates the protocol, handles public case data and stores the final classification in SQLite. Plaintext coordinates and secret keys stay in the clients.
 
 **Stack:** Go · Lattigo (BGV, multiparty) · WebAssembly · garbled circuits + oblivious transfer · SQLite · vanilla JS.
 
@@ -10,10 +10,10 @@ Esta versión está pensada para demostrar el protocolo con **Policía + tres us
 
 ## Arquitectura
 
-- **Go API**: autenticación, SQLite, coordinación de sesiones multiparty, evaluación homomórfica y buzón de mensajes del circuito garbleado (no ve nada en claro).
+- **Go API**: autenticación, SQLite, coordinación de sesiones multiparty, evaluación homomórfica y buzón de mensajes del circuito garbleado. Recibe datos públicos del caso y la clasificación final.
 - **SQLite**: usuarios, sesiones de autenticación, casos, participantes y clasificación final.
 - **party.wasm**: criptografía local en cada vista (Lattigo + circuitos garbleados).
-- **sessionStorage**: cada cuenta demo usa su propio Bearer token, por lo que Policía, Carlos, Fer y Ximena pueden coexistir sin sustituir sus identidades.
+- **sessionStorage**: cada pestaña guarda el token Bearer de su cuenta, por lo que Policía, Carlos, Fer y Alberto pueden coexistir sin sustituir sus identidades.
 - **IndexedDB local**: conserva el estado criptográfico serializado por `cryptoSession` para que navegar al dashboard o recargar no genere una nueva secret key.
 - **Secret keys**: nunca se envían a la API ni se guardan en SQLite. En esta demo sí se serializan **solo localmente** dentro de `IndexedDB` del navegador para poder regresar al dashboard y continuar la misma sesión.
 
@@ -45,7 +45,7 @@ La base **no guarda** `sk_P`, `sk_S`, `sk_out`, coordenadas, `dx`, `dy`, `D²` n
 | Policía | `police@demo.local` | `Police123!` |
 | Carlos | `carlos@demo.local` | `Demo1234!` |
 | Fer | `fer@demo.local` | `Demo1234!` |
-| Ximena | `ximena@demo.local` | `Demo1234!` |
+| Alberto | `alberto@demo.local` | `Demo1234!` |
 
 ## Ejecutar
 
@@ -64,33 +64,23 @@ Abrir:
 http://localhost:8080
 ```
 
-## Demo Control Center
+## Demostración en pestañas o equipos separados
 
-La página principal muestra **Policía a la izquierda** y el panel de **Sospechosos a la derecha**. Usa los botones Carlos, Fer y Ximena para cambiar de cuenta en el panel derecho. Cada cuenta conserva su pantalla al cambiar de persona.
+Entra en `/login.html` con la cuenta de Policía en una pestaña y con una cuenta de Usuario en otra. En la portada y en el login, **Otra pestaña** abre un acceso independiente. Cada pestaña guarda su token Bearer en `sessionStorage` y las solicitudes de la interfaz usan ese token. El panel Usuario muestra las solicitudes asignadas a su cuenta.
 
-### Flujo recomendado
+### En varios equipos
 
-1. Crea un caso en el panel de Policía y selecciona a los participantes.
-2. Abre el protocolo de una persona en Policía y selecciona a esa persona a la derecha para abrir su solicitud.
-3. Genera la secret key en cada panel. El primero espera a la otra parte para completar CPK/RLK.
-4. Policía cifra y envía el punto de referencia. La otra parte ingresa su ubicación y pulsa **Autorizar y enviar ubicación cifrada**.
-5. Mantén ambos protocolos visibles hasta ver la clasificación en Policía. Luego vuelve al panel de casos y repite con la siguiente persona.
+Arranca **una instancia** de la API en el equipo anfitrión con `./bin/lattigo-api`. En los demás equipos, conectados a la misma red, abre `http://IP-DEL-ANFITRION:8080/login.html`. Cada navegador actúa como cliente independiente y mantiene sus claves y sus coordenadas localmente. Todos usan la misma API coordinadora para compartir la sesión de protocolo. En macOS, `ipconfig getifaddr en0` suele mostrar la IP de Wi-Fi. Usa el mismo nombre o IP al volver a una sesión en el mismo equipo para conservar el acceso al IndexedDB de ese origen.
 
-### Autenticación
+### Flujo de presentación
 
-Cada cuenta demo usa un token Bearer con una clave propia en `sessionStorage`. Los paneles comparten el origen y el almacenamiento del navegador, por lo que el modo demo simula roles en un solo equipo. Para ensayar con almacenamiento separado, usa **Modo normal** en perfiles de navegador distintos.
+1. Policía crea un caso y elige a los usuarios. Abre el protocolo de la primera persona mientras ella abre su propia solicitud.
+2. Ambos pulsan **Generar mi clave**. La primera parte espera hasta que las claves colectivas estén listas.
+3. Policía ingresa y cifra la escena. Después se habilitan los campos y el botón de envío en la vista del Usuario. Las coordenadas admiten enteros de 0 a 100.
+4. Mantén abiertas las dos pantallas de protocolo hasta ver la clasificación en Policía. El Usuario solo verá la confirmación de participación.
+5. Muestra la consola de cada pantalla para explicar dónde se generan las claves, qué mensajes recibe la API y dónde aparece la clasificación.
 
-## Modo normal
-
-Desde el Control Center también existe **Modo normal · Login**.
-
-Ahí puedes:
-
-- iniciar sesión manualmente;
-- registrar usuarios nuevos;
-- usar el mismo dashboard y protocolo.
-
-Los registros nuevos se crean siempre con rol `suspect`.
+Los usuarios nuevos pueden registrarse desde el login. El rol de sus cuentas es `suspect`.
 
 ## DBeaver
 

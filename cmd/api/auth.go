@@ -47,7 +47,7 @@ func clearAuthCookie(w http.ResponseWriter) {
 func currentUser(r *http.Request) (userRecord, string, error) {
 	// Preferimos Bearer token para que cada pestaña pueda mantener una
 	// identidad independiente en sessionStorage. Esto permite tener
-	// Policía, Carlos, Fer y Ximena abiertos al mismo tiempo.
+	// Policía, Carlos, Fer y Alberto abiertos al mismo tiempo.
 	auth := strings.TrimSpace(r.Header.Get("Authorization"))
 	if strings.HasPrefix(strings.ToLower(auth), "bearer ") {
 		token := strings.TrimSpace(auth[len("Bearer "):])
