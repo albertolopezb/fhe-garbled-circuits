@@ -1,5 +1,5 @@
 experiment,scenario,expected,observed,ok,detail
-e13,missing_ot_response,"assignment stays pending, no class, no crash",pending after 15 s without the User,true,otR=true otE=false; police page: Ciphertexts enviados. Esperando a la otra parte y la evaluación homomórfica…
+e13,missing_ot_response,"assignment stays pending, no class, no crash",pending after 15 s without the User,true,otR=true otE=false; police page: Esperando la respuesta final de la transferencia ciega (OT).
 e13,user_reopens_page,"state restored from IndexedDB, protocol completes with DENTRO DEL RADIO",DENTRO DEL RADIO,true,user log: state restored from IndexedDB
 e13,police_reload_after_keygen,"same key share restored, protocol completes with FUERA DEL RADIO",FUERA DEL RADIO,true,police log: state restored from IndexedDB
 e13,out_of_range_input,unknown (measured),rejected: las coordenadas deben estar entre 0 y 100,true,the modified client was stopped; true delta would be 36075

@@ -114,10 +114,16 @@ async function main() {
   await mkdir(shotDir, { recursive: true });
   const police = await Tab.open(port);
   const user = await Tab.open(port);
-  await police.goto(`${base}/demo-login.html?account=police`);
-  await police.until("location.pathname === '/police-dashboard.html'", "police login");
-  await user.goto(`${base}/demo-login.html?account=carlos`);
-  await user.until("location.pathname === '/suspect-dashboard.html'", "user login");
+  // Fixture accounts and passwords of the seeded demo (cmd/api/db.go, seedDemoUsers).
+  const login = async (tab, email, password, dash) => {
+    await tab.goto(`${base}/login.html`);
+    await tab.until("typeof loginWithCredentials === 'function'", "login page");
+    await tab.eval(`loginWithCredentials(${JSON.stringify(email)}, ${JSON.stringify(password)}).then(() => true)`);
+    await tab.goto(`${base}/${dash}`);
+    await tab.until(`location.pathname === '/${dash}'`, dash);
+  };
+  await login(police, "police@demo.local", "Police123!", "police-dashboard.html");
+  await login(user, "carlos@demo.local", "Demo1234!", "suspect-dashboard.html");
   await police.until("typeof api === 'function'", "police scripts");
   const suspects = await police.eval(`api("/api/police/suspects")`);
   const list = suspects.users || suspects.suspects || Object.values(suspects).find(Array.isArray);

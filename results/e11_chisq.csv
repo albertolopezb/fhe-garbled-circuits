@@ -1,10 +1,10 @@
 experiment,test,case,samples,bins,chi_square,df,z_approx,p_approx,note
-e11,uniform_all_slots,inside,1638400.0000,65537,65696.5621,65536,0.4450,0.3282,every slot of the first runs; one bin per residue mod t
-e11,uniform_slot0,inside,1000,16,8.2240,15,-1.3698,0.9146,"slot 0 (the slot that carries delta), one value per run"
-e11,uniform_all_slots,boundary,1638400.0000,65537,64620.7856,65536,-2.5380,0.9944,every slot of the first runs; one bin per residue mod t
-e11,uniform_slot0,boundary,1000,16,17.5040,15,0.5556,0.2893,"slot 0 (the slot that carries delta), one value per run"
-e11,uniform_all_slots,outside,1638400.0000,65537,65230.3149,65536,-0.8438,0.8006,every slot of the first runs; one bin per residue mod t
-e11,uniform_slot0,outside,1000,16,17.6960,15,0.5871,0.2786,"slot 0 (the slot that carries delta), one value per run"
-e11,same_distribution_slot0,inside_vs_outside,2000,16,11.7071,15,-0.5298,0.7019,two-sample chi-square: does the server's slot-0 view depend on the class?
-e11,same_distribution_slot0,inside_vs_boundary,2000,16,13.9674,15,-0.0713,0.5284,two-sample chi-square: does the server's slot-0 view depend on the class?
-e11,same_distribution_slot0,boundary_vs_outside,2000,16,18.8768,15,0.7760,0.2189,two-sample chi-square: does the server's slot-0 view depend on the class?
+e11,uniform_all_slots,inside,1638400.0000,65537,65476.1587,65536,-0.1635,0.5649,every slot of the first runs; one bin per residue mod t
+e11,uniform_slot0,inside,1000,16,24.4160,15,1.5704,0.0582,"slot 0 (the slot that carries delta), one value per run"
+e11,uniform_all_slots,boundary,1638400.0000,65537,66143.7689,65536,1.6754,0.0469,every slot of the first runs; one bin per residue mod t
+e11,uniform_slot0,boundary,1000,16,16.6400,15,0.4108,0.3406,"slot 0 (the slot that carries delta), one value per run"
+e11,uniform_all_slots,outside,1638400.0000,65537,65584.8003,65536,0.1366,0.4457,every slot of the first runs; one bin per residue mod t
+e11,uniform_slot0,outside,1000,16,15.3920,15,0.1927,0.4236,"slot 0 (the slot that carries delta), one value per run"
+e11,same_distribution_slot0,inside_vs_outside,2000,16,14.5273,15,0.0345,0.4862,two-sample chi-square: does the server's slot-0 view depend on the class?
+e11,same_distribution_slot0,inside_vs_boundary,2000,16,30.8952,15,2.3591,0.0092,two-sample chi-square: does the server's slot-0 view depend on the class?
+e11,same_distribution_slot0,boundary_vs_outside,2000,16,25.4734,15,1.7079,0.0438,two-sample chi-square: does the server's slot-0 view depend on the class?

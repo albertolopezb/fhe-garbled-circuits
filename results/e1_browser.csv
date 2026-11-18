@@ -1,5 +1,5 @@
 experiment,scenario,px,py,ux,uy,r,delta_true,expected,police_page_text,user_page_text,ok,error,chrome_version
-e1_browser,1_inside,10,20,11,22,5,-20,"DENTRO DEL RADIO","DENTRO DEL RADIO","Tu parte terminó. El resultado se entrega únicamente a la vista de Policía.",true,"","Chrome/157.0.8103.52"
-e1_browser,2_boundary,10,20,13,24,5,0,"EXACTAMENTE EN EL LIMITE","EXACTAMENTE EN EL LIMITE","Tu parte terminó. El resultado se entrega únicamente a la vista de Policía.",true,"","Chrome/157.0.8103.52"
-e1_browser,3_outside,10,20,14,24,5,7,"FUERA DEL RADIO","FUERA DEL RADIO","Tu parte terminó. El resultado se entrega únicamente a la vista de Policía.",true,"","Chrome/157.0.8103.52"
-e1_browser,4_quota,10,20,11,22,5,-20,"QUOTA ERROR","Ciphertexts enviados. Esperando a la otra parte y la evaluación homomórfica…","límite de tres evaluaciones por hora para esta persona. Puedes volver a intentar en 60 min.",true,"","Chrome/157.0.8103.52"
+e1_browser,1_inside,10,20,11,22,5,-20,"DENTRO DEL RADIO","DENTRO DEL RADIO","Tu participación terminó. La clasificación se entrega a Policía.",true,"","Chrome/157.0.8103.79"
+e1_browser,2_boundary,10,20,13,24,5,0,"EXACTAMENTE EN EL LIMITE","EXACTAMENTE EN EL LIMITE","Tu participación terminó. La clasificación se entrega a Policía.",true,"","Chrome/157.0.8103.79"
+e1_browser,3_outside,10,20,14,24,5,7,"FUERA DEL RADIO","FUERA DEL RADIO","Tu participación terminó. La clasificación se entrega a Policía.",true,"","Chrome/157.0.8103.79"
+e1_browser,4_quota,10,20,11,22,5,-20,"QUOTA ERROR","Esperando el envío de la otra ubicación y la evaluación cifrada.","límite de tres evaluaciones por hora para esta persona. Puedes volver a intentar en 60 min.",true,"","Chrome/157.0.8103.79"

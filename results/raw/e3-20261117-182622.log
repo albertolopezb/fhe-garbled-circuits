@@ -1,0 +1,6 @@
+2026/11/17 18:26:22 previous results/e3.csv kept as results\raw\e3-replaced-at-20261117-182622.csv
+2026/11/17 18:26:22 e3: 1011 runs, seed 1, rekey every 50, commit d3114e5c8d6e9ae1858fe0bc116ad2aa2323e292 dirty=true, go1.26.0
+2026/11/17 18:26:23 3 warm-up runs discarded
+2026/11/17 18:27:47 500/1011 runs, 0 mismatches, 0 failures, 84 s
+2026/11/17 18:29:18 1000/1011 runs, 0 mismatches, 0 failures, 175 s
+2026/11/17 18:29:20 e3 done: 1011 runs, 0 mismatches, 0 failed runs, 176.7 s -> results/e3.csv

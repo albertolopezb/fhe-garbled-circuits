@@ -1,0 +1,13 @@
+party/default: 11802642 B, gzip 2878843, brotli 2075097
+party/strip: 11488036 B, gzip 2817749, brotli 2034089
+party/trimpath: 11757642 B, gzip 2878579, brotli 2079835
+party/strip_trimpath: 11443013 B, gzip 2817387, brotli 2039457
+party/default_wasmopt_Oz: 10336136 B, gzip 2780327, brotli 2044993
+party/strip_wasmopt_Oz: 10336159 B, gzip 2781252, brotli 2048991
+party/tinygo: not run (tinygo not installed)
+ablate/empty_runtime: 1964129 B, gzip 582821, brotli 446469
+ablate/gc_ot: 3058834 B, gzip 871648, brotli 660475
+ablate/bgv: 11974817 B, gzip 2896829, brotli 2095274
+ablate/mpbgv: 11957145 B, gzip 2898439, brotli 2085009
+party/committed_in_repo: 12915336 B, gzip 3148863, brotli 2262962
+wrote results/e9_sizes.csv

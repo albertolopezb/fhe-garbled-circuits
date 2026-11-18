@@ -1,6 +1,6 @@
 {
-  "date": "2026-11-12T21:04:54-06:00",
-  "git_commit": "2fd5a89818012bd9350f2de265ce82443dba3658",
+  "date": "2026-11-17T18:05:18-06:00",
+  "git_commit": "d3114e5c8d6e9ae1858fe0bc116ad2aa2323e292",
   "git_dirty": true,
   "go_version": "go1.26.0",
   "goos": "windows",
@@ -61,8 +61,8 @@
     "power_scheme": "GUID de plan de energía: 381b4222-f694-41f0-9685-ff5bb260df2e  (Equilibrado)",
     "on_ac_power": true,
     "battery_status_code": 2,
-    "battery_percent": 15,
+    "battery_percent": 85,
     "defender_realtime_enabled": true,
-    "chrome_version": "157.0.8103.52"
+    "chrome_version": "157.0.8103.79"
   }
 }

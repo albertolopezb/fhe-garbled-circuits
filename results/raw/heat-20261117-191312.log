@@ -1,0 +1,61 @@
+heat users=1 per_pair=1 concurrent rep 0: 6.884 s ok 
+heat users=1 per_pair=1 concurrent rep 1: 6.920 s ok 
+heat users=1 per_pair=1 concurrent rep 2: 6.849 s ok 
+heat users=1 per_pair=1 concurrent rep 3: 6.875 s ok 
+heat users=1 per_pair=1 concurrent rep 4: 7.899 s ok 
+heat users=1 per_pair=2 concurrent rep 0: 7.185 s ok ok 
+heat users=1 per_pair=2 concurrent rep 1: 7.800 s ok ok 
+heat users=1 per_pair=2 concurrent rep 2: 7.151 s ok ok 
+heat users=1 per_pair=2 concurrent rep 3: 7.844 s ok ok 
+heat users=1 per_pair=2 concurrent rep 4: 7.858 s ok ok 
+heat users=1 per_pair=3 concurrent rep 0: 9.825 s ok ok ok 
+heat users=1 per_pair=3 concurrent rep 1: 9.863 s ok ok ok 
+heat users=1 per_pair=3 concurrent rep 2: 11.146 s ok ok ok 
+heat users=1 per_pair=3 concurrent rep 3: 8.827 s ok ok ok 
+heat users=1 per_pair=3 concurrent rep 4: 9.889 s ok ok ok 
+heat users=2 per_pair=1 concurrent rep 0: 7.153 s ok ok 
+heat users=2 per_pair=1 concurrent rep 1: 7.201 s ok ok 
+heat users=2 per_pair=1 concurrent rep 2: 7.193 s ok ok 
+heat users=2 per_pair=1 concurrent rep 3: 7.860 s ok ok 
+heat users=2 per_pair=1 concurrent rep 4: 7.833 s ok ok 
+heat users=2 per_pair=2 concurrent rep 0: 11.101 s ok ok ok ok 
+heat users=2 per_pair=2 concurrent rep 1: 11.146 s ok ok ok ok 
+heat users=2 per_pair=2 concurrent rep 2: 10.830 s ok ok ok ok 
+heat users=2 per_pair=2 concurrent rep 3: 11.147 s ok ok ok ok 
+heat users=2 per_pair=2 concurrent rep 4: 11.410 s ok ok ok ok 
+heat users=2 per_pair=3 concurrent rep 0: 15.364 s ok ok ok ok ok ok 
+heat users=2 per_pair=3 concurrent rep 1: 15.796 s ok ok ok ok ok ok 
+heat users=2 per_pair=3 concurrent rep 2: 17.211 s ok ok ok ok ok ok 
+heat users=2 per_pair=3 concurrent rep 3: 16.293 s ok ok ok ok ok ok 
+heat users=2 per_pair=3 concurrent rep 4: 15.681 s ok ok ok ok ok ok 
+heat users=3 per_pair=1 concurrent rep 0: 9.202 s ok ok ok 
+heat users=3 per_pair=1 concurrent rep 1: 8.774 s ok ok ok 
+heat users=3 per_pair=1 concurrent rep 2: 14.777 s ok ok ok 
+heat users=3 per_pair=1 concurrent rep 3: 8.778 s ok ok ok 
+heat users=3 per_pair=1 concurrent rep 4: 8.735 s ok ok ok 
+heat users=3 per_pair=2 concurrent rep 0: 14.270 s ok ok ok ok ok ok 
+heat users=3 per_pair=2 concurrent rep 1: 90.057 s ERR ok ERR ok ok ok 
+heat users=3 per_pair=2 concurrent rep 2: 14.182 s ok ok ok ok ok ok 
+heat users=3 per_pair=2 concurrent rep 3: 13.401 s ok ok ok ok ok ok 
+heat users=3 per_pair=2 concurrent rep 4: 13.377 s ok ok ok ok ok ok 
+heat users=3 per_pair=3 concurrent rep 0: 90.013 s ERR ERR ok ok ERR ok ERR ERR ERR 
+heat users=3 per_pair=3 concurrent rep 1: 16.782 s ok ok ok ok ok ok ok ok ok 
+heat users=3 per_pair=3 concurrent rep 2: 16.715 s ok ok ok ok ok ok ok ok ok 
+heat users=3 per_pair=3 concurrent rep 3: 15.717 s ok ok ok ok ok ok ok ok ok 
+heat users=3 per_pair=3 concurrent rep 4: 15.850 s ok ok ok ok ok ok ok ok ok 
+heat users=1 per_pair=1 sequential rep 0: 6.832 s ok 
+heat users=1 per_pair=1 sequential rep 1: 5.853 s ok 
+heat users=1 per_pair=1 sequential rep 2: 6.848 s ok 
+heat users=1 per_pair=1 sequential rep 3: 6.836 s ok 
+heat users=1 per_pair=1 sequential rep 4: 6.867 s ok 
+heat users=2 per_pair=1 sequential rep 0: 12.821 s ok ok 
+heat users=2 per_pair=1 sequential rep 1: 12.833 s ok ok 
+heat users=2 per_pair=1 sequential rep 2: 13.827 s ok ok 
+heat users=2 per_pair=1 sequential rep 3: 12.833 s ok ok 
+heat users=2 per_pair=1 sequential rep 4: 11.835 s ok ok 
+heat users=3 per_pair=1 sequential rep 0: 19.848 s ok ok ok 
+heat users=3 per_pair=1 sequential rep 1: 17.832 s ok ok ok 
+heat users=3 per_pair=1 sequential rep 2: 17.834 s ok ok ok 
+heat users=3 per_pair=1 sequential rep 3: 18.835 s ok ok ok 
+heat users=3 per_pair=1 sequential rep 4: 19.805 s ok ok ok 
+heat done (Chrome/157.0.8103.79)

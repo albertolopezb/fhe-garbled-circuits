@@ -1,0 +1,12 @@
+﻿checked_at=2026-11-17T19:28:41.7486918-06:00
+rerun_started=2026-11-17T18:04:57-06:00
+ActivePowerScheme=381b4222-f694-41f0-9685-ff5bb260df2e (Equilibrado/Balanced base plan)
+ActiveOverlayAcPowerScheme=ded574b5-45a0-4f42-8737-46345c09c238 (ded574b5... = Best performance power mode)
+ActiveOverlayDcPowerScheme=961cc777-2547-4f9d-8174-7d86181b8a7a
+BatteryStatus=2 (2 = on AC power)
+BatteryCharge=46
+note=AC overlay was verified as ded574b5 immediately before the rerun started and again at 18:39 and 19:26.
+
+battery_at_start=85% (hardware.json 18:05); battery_at_19:29=45%
+root\wmi BatteryStatus at 19:29: PowerOnline=True Charging=False Discharging=True DischargeRate=5449 mW
+note=the charger stayed connected but did not cover the full-load draw; the battery supplied the difference (~5.4 W). Windows kept the AC power policy (AC overlay = Best performance).

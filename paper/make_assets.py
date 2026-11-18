@@ -502,7 +502,7 @@ if e6:
         axes[1].plot(xs, [miq(fl(groups[(n, mode)], "peak_ws_bytes"))[0] / 1048576 for n in xs], st, color=c, ms=3, lw=0.9, label=mode)
     axes[0].set_ylabel("pairs per second")
     axes[1].set_ylabel("peak working set (MiB)")
-    axes[1].set_xlabel("number of Police--User pairs $n$")
+    axes[1].set_xlabel("number of Police–User pairs $n$")
     axes[1].set_xscale("log", base=2)
     axes[0].legend(fontsize=6.5)
     fig.savefig(os.path.join(OUT, "fig_e6_scaling.pdf"))
@@ -670,6 +670,62 @@ if e13:
     table("tab_e13.tex", ["Scenario", "Observed", "As expected"], rows, "llc")
     num("eThirteenRuns", len(e13))
     num("eThirteenOk", sum(1 for r in e13 if r["ok"] == "true"))
+
+# ---------------------------------------------------------------- short report: four condensed tables
+def N(key):
+    return numbers.get(''.join(DIGITS.get(ch, ch) for ch in key), "[not measured]")
+
+
+# Table: summary of the experiments. The E12 row is read from results/e12_test.log (300 of 300 trials), as in the text.
+table("tab_summary.tex", ["Experiment", "Runs", "Result"], [
+    ["Correctness (E1)", N("eOneRuns"), N("eOneMismatch") + " wrong"],
+    ["Value limit (E2)", N("eTwoRuns"), "correct from " + N("eTwoLastGoodNeg") + " to " + N("eTwoLastGoodPos")],
+    ["Noise (E3)", N("eThreeRuns"), N("eThreeDelta") + " of " + N("eThreeQBits") + " bits used"],
+    ["Parameter sets (E4)", N("eFourSets") + " sets", N("eFourCorrect") + " correct"],
+    ["Load, native (E6)", "up to " + N("eSixMaxPairs") + " pairs", "peak " + N("eSixBestThroughput") + " pairs/s, " + N("eSixMaxMem") + " MiB"],
+    ["Browser (E6)", N("eSixBrRows"), N("eSixBrConcurrentOneOne") + " s per assignment; " + N("eSixBrFailed") + " failed"],
+    ["Repeated queries (E10)", N("eTenPoints") + " points", "median " + N("eTenClassMedian") + " queries to locate"],
+    ["Cheating garbler (E12)", "300", "300 succeeded"],
+], "lrl")
+
+# Table: native time per phase (E3) with the WebAssembly/native ratio of the separate E9 comparison.
+if e3:
+    rows = []
+    for col, label in PHASES:
+        med, q1, q3 = miq(fl(e3, col))
+        ratio = "--"
+        if e9w and e9n and miq(fl(e9n, col))[0] > 0:
+            ratio = sig(miq(fl(e9w, col))[0] / miq(fl(e9n, col))[0], 2) + "$\\times$"
+        rows.append([label, sig(med), f"[{sig(q1)}, {sig(q3)}]", ratio])
+    table("tab_phases.tex", ["Phase", "Native (ms)", "IQR", "WASM/native"], rows, "lrrr")
+
+# Table: five representative parameter sets (E4).
+if sets:
+    def pick(logn, logq, logp=None):
+        return next((e for e in default if e["logN"] == logn and e["logQ"] == logq and e.get("reps")
+                     and (logp is None or e["logP"] == logp)), None)
+
+    passed = [e for e in default if e["status"] == "correct" and e.get("reps")]
+    fastest = pick(N("eFourBestN"), N("eFourBestQ").replace(", ", "-"), N("eFourBestP").replace(", ", "-"))
+    chosen = [("Deployed", pick("14", "56-55-55-54-54-54")), ("Middle", pick("13", "56-54-54")), ("Fastest within std.", fastest),
+              ("Tightest that passed", min(passed, key=lambda e: e["budget_min"])),
+              ("Failed", next((e for e in default if e["status"] == "incorrect" and e.get("reps")), None))]
+    rows = [[name, e["logN"], f"{float(e['qp_total_bits']):.0f}", status_cell(e), f"{e['budget_min']:.1f}", sig(e["client"][0]),
+             sig(e["server"][0]), kib(e["ct"])] for name, e in chosen if e]
+    table("tab_e4_short.tex", ["Set", "$\\log N$", "$\\log QP$", "Correct", "Budget", "Client", "Server", "Ct"], rows, "lrrlrrrr")
+
+# Table: data per assignment (E7 serialized sizes after base64, E9 module size).
+if e7:
+    def up(pred):
+        return kib(sum(float(r["base64_bytes_total"]) for r in e7 if r["sender"] == "each client" and pred(r["phase"])))
+
+    table("tab_data.tex", ["Item", "Size"], [
+        ["Key-generation shares, per client", up(lambda p: p.startswith(("CPK", "RLK"))) + " KiB"],
+        ["Encrypted coordinates, per client", up(lambda p: p == "Ciphertexts") + " KiB"],
+        ["Share-conversion message, per client", up(lambda p: p == "E2S") + " KiB"],
+        ["Garbled circuit and oblivious transfer", N("eSevenGC") + " KiB"],
+        ["WebAssembly client (with brotli)", N("eNinePartyDefaultMiB") + " MiB (" + N("eNinePartyDefaultBr") + " MiB)"],
+    ], "lr")
 
 # ---------------------------------------------------------------- numbers.tex
 ALL = ["hwModel", "hwCPU", "hwCores", "hwThreads", "hwRAM", "hwOS", "hwGo", "hwNode", "hwCommit", "hwDate", "hwPower", "hwAC", "hwDefender"]

@@ -1,0 +1,24 @@
+2026/11/17 18:05:21 previous results/e1.csv kept as results\raw\e1-replaced-at-20261117-180521.csv
+2026/11/17 18:05:21 e1: 10011 runs, seed 1, rekey every 50, commit d3114e5c8d6e9ae1858fe0bc116ad2aa2323e292 dirty=true, go1.26.0
+2026/11/17 18:05:22 3 warm-up runs discarded
+2026/11/17 18:06:15 500/10011 runs, 0 mismatches, 0 failures, 53 s
+2026/11/17 18:07:18 1000/10011 runs, 0 mismatches, 0 failures, 116 s
+2026/11/17 18:08:19 1500/10011 runs, 0 mismatches, 0 failures, 178 s
+2026/11/17 18:09:20 2000/10011 runs, 0 mismatches, 0 failures, 239 s
+2026/11/17 18:10:22 2500/10011 runs, 0 mismatches, 0 failures, 300 s
+2026/11/17 18:11:23 3000/10011 runs, 0 mismatches, 0 failures, 362 s
+2026/11/17 18:12:25 3500/10011 runs, 0 mismatches, 0 failures, 424 s
+2026/11/17 18:13:29 4000/10011 runs, 0 mismatches, 0 failures, 488 s
+2026/11/17 18:14:33 4500/10011 runs, 0 mismatches, 0 failures, 551 s
+2026/11/17 18:15:36 5000/10011 runs, 0 mismatches, 0 failures, 614 s
+2026/11/17 18:16:40 5500/10011 runs, 0 mismatches, 0 failures, 678 s
+2026/11/17 18:17:44 6000/10011 runs, 0 mismatches, 0 failures, 743 s
+2026/11/17 18:18:45 6500/10011 runs, 0 mismatches, 0 failures, 803 s
+2026/11/17 18:19:46 7000/10011 runs, 0 mismatches, 0 failures, 865 s
+2026/11/17 18:20:48 7500/10011 runs, 0 mismatches, 0 failures, 926 s
+2026/11/17 18:21:51 8000/10011 runs, 0 mismatches, 0 failures, 989 s
+2026/11/17 18:22:53 8500/10011 runs, 0 mismatches, 0 failures, 1051 s
+2026/11/17 18:23:53 9000/10011 runs, 0 mismatches, 0 failures, 1111 s
+2026/11/17 18:24:54 9500/10011 runs, 0 mismatches, 0 failures, 1172 s
+2026/11/17 18:25:54 10000/10011 runs, 0 mismatches, 0 failures, 1232 s
+2026/11/17 18:25:55 e1 done: 10011 runs, 0 mismatches, 0 failed runs, 1233.1 s -> results/e1.csv

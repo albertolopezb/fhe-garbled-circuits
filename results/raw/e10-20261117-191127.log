@@ -1,0 +1,9 @@
+50/300 hidden points
+100/300 hidden points
+150/300 hidden points
+200/300 hidden points
+250/300 hidden points
+300/300 hidden points
+exact_delta   queries: min 1 median 2.0 max 2 | hours at median: 0 (1 account), 0 (5 accounts)
+class_greedy  queries: min 4 median 13.0 max 14 | hours at median: 4 (1 account), 0 (5 accounts)
+wrote results/e10.csv and results/e10_summary.csv

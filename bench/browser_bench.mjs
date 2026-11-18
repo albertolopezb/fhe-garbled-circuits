@@ -20,8 +20,8 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 
 const CHROME = process.env.CHROME || "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
-const ACCOUNTS = { police: "police@demo.local", carlos: "carlos@demo.local", fer: "fer@demo.local", ximena: "ximena@demo.local" };
-const USERS = ["carlos", "fer", "ximena"];
+const ACCOUNTS = { police: "police@demo.local", carlos: "carlos@demo.local", fer: "fer@demo.local", alberto: "alberto@demo.local" };
+const USERS = ["carlos", "fer", "alberto"];
 const CHROME_FLAGS = ["--headless=new", "--no-first-run", "--no-default-browser-check", "--disable-extensions",
   "--disable-background-timer-throttling", "--disable-renderer-backgrounding", "--disable-backgrounding-occluded-windows",
   "--window-size=1100,900"];
@@ -177,9 +177,14 @@ function osSample() {
 
 // ---------------------------------------------------------------- protocol driving
 const tokens = {};
+// Fixture passwords of the seeded demo accounts (cmd/api/db.go, seedDemoUsers).
+const PASSWORDS = { police: "Police123!", carlos: "Demo1234!", fer: "Demo1234!", alberto: "Demo1234!" };
 async function login(role, base) {
   const tab = await Tab.open(browsers[role].port, role);
-  await tab.goto(`${base}/demo-login.html?account=${role}`);
+  await tab.goto(`${base}/login.html`);
+  await tab.until("typeof loginWithCredentials === 'function'", "login page");
+  await tab.eval(`loginWithCredentials(${JSON.stringify(ACCOUNTS[role])}, ${JSON.stringify(PASSWORDS[role])}).then(() => true)`);
+  await tab.goto(`${base}/${role === "police" ? "police" : "suspect"}-dashboard.html`);
   await tab.until("location.pathname.endsWith('-dashboard.html') && typeof api === 'function'", "login");
   tokens[role] = await tab.eval("sessionStorage.getItem('pp_auth_token')");
   return tab;

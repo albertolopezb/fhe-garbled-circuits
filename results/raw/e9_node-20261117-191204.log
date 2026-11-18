@@ -1,0 +1,10 @@
+2026/11/17 19:12:07 previous results/e9_native_e3.csv kept as results\raw\e3-replaced-at-20261117-191207.csv
+2026/11/17 19:12:07 e3: 41 runs, seed 1, rekey every 50, commit d3114e5c8d6e9ae1858fe0bc116ad2aa2323e292 dirty=true, go1.26.0
+2026/11/17 19:12:07 3 warm-up runs discarded
+2026/11/17 19:12:14 e3 done: 41 runs, 0 mismatches, 0 failed runs, 6.9 s -> results/e9_native_e3.csv
+2026/11/17 19:12:14 previous results/e9_wasm_node_e3.csv kept as results/raw/e3-replaced-at-20261117-191214.csv
+2026/11/17 19:12:14 e3: 41 runs, seed 1, rekey every 50, commit unknown dirty=false, go1.26.0
+2026/11/17 19:12:16 3 warm-up runs discarded
+2026/11/17 19:12:45 e3 done: 41 runs, 0 mismatches, 0 failed runs, 28.4 s -> results/e9_wasm_node_e3.csv
+wrote results/e9_load_node.csv (30 runs, 3 warm-up runs discarded)
+node v22.21.0, go version go1.26.0 windows/amd64

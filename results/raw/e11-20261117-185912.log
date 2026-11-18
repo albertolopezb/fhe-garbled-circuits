@@ -1,0 +1,4 @@
+2026/11/17 19:01:17 e11 inside: 1000 runs done
+2026/11/17 19:03:22 e11 boundary: 1000 runs done
+2026/11/17 19:05:26 e11 outside: 1000 runs done
+2026/11/17 19:05:26 e11 done -> results/e11_serverview.csv, results/e11_chisq.csv

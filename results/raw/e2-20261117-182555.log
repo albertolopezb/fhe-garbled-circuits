@@ -1,0 +1,4 @@
+2026/11/17 18:25:55 previous results/e2.csv kept as results\raw\e2-replaced-at-20261117-182555.csv
+2026/11/17 18:25:55 e2: 239 runs, seed 1, rekey every 50, commit d3114e5c8d6e9ae1858fe0bc116ad2aa2323e292 dirty=true, go1.26.0
+2026/11/17 18:25:55 3 warm-up runs discarded
+2026/11/17 18:26:22 e2 done: 239 runs, 114 mismatches, 0 failed runs, 26.8 s -> results/e2.csv

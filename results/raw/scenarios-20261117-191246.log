@@ -1,0 +1,5 @@
+1_inside: expected DENTRO DEL RADIO | police page: DENTRO DEL RADIO | user page: Tu participación terminó. La clasificación se entrega a Policía. | ok=true 
+2_boundary: expected EXACTAMENTE EN EL LIMITE | police page: EXACTAMENTE EN EL LIMITE | user page: Tu participación terminó. La clasificación se entrega a Policía. | ok=true 
+3_outside: expected FUERA DEL RADIO | police page: FUERA DEL RADIO | user page: Tu participación terminó. La clasificación se entrega a Policía. | ok=true 
+4_quota: expected QUOTA ERROR | police page: Esperando el envío de la otra ubicación y la evaluación cifrada. | user page: límite de tres evaluaciones por hora para esta persona. Puedes volver a intentar en 60 min. | ok=true 
+wrote results/e1_browser.csv and screenshots in paper/figures; 0 scenario(s) failed
